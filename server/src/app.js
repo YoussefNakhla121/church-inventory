@@ -9,8 +9,12 @@ const conditionReportRoutes = require('./routes/conditionReports');
 
 const app = express();
 
+
+
 // ─── Middleware ───────────────────────────────────────────────────────────────
-app.use(cors());
+app.use(cors({
+  origin: 'https://church-inventory.vercel.app'
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
