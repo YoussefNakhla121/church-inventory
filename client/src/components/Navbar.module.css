@@ -1,0 +1,501 @@
+/* Navbar.module.css - Always visible, scales down with screen */
+
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.4rem 0.6rem;
+  min-height: 52px;
+  background: rgba(10, 15, 30, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow: 0 1px 20px rgba(0, 0, 0, 0.4);
+  width: 100%;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+/* ========== BRAND SECTION ========== */
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: opacity var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.brand:hover {
+  opacity: 0.85;
+  color: var(--text-primary);
+}
+
+.brandIcon {
+  width: 26px;
+  height: 26px;
+  min-width: 26px;
+  background: linear-gradient(135deg, var(--primary), #a855f7);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+
+/* Hide brand text on small screens, show icon only */
+.brandText {
+  display: none;
+}
+
+.brandName {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.brandSub {
+  font-size: 0.48rem;
+  font-weight: 400;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+/* ========== HAMBURGER — always hidden ========== */
+.hamburger {
+  display: none;
+}
+
+/* ========== NAVIGATION LINKS ========== */
+.navLinks {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.navLinks li {
+  flex-shrink: 1;
+  min-width: 0;
+}
+
+.navLink {
+  padding: 0.3rem 0.4rem;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  display: inline-block;
+  border-bottom: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.navLink:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.activeLink {
+  color: var(--primary) !important;
+  background: var(--primary-light) !important;
+}
+
+/* ========== USER INFO ========== */
+.userInfoMobile {
+  display: none;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.userPill {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+  padding: 0.25rem 0.4rem;
+  flex-shrink: 0;
+}
+
+.userPillButton {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  border-radius: 24px;
+}
+
+.userPillButton:hover .userPill {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--primary);
+}
+
+.avatarCircle {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  background: linear-gradient(135deg, var(--primary), #a855f7);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  font-weight: 700;
+  color: white;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+/* Hide username on very small screens */
+.username {
+  display: none;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+}
+
+.roleBadge {
+  font-size: 0.48rem;
+  font-weight: 600;
+  padding: 0.12rem 0.35rem;
+  border-radius: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.roleManager {
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+.roleRequester {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+.logoutBtn {
+  padding: 0.28rem 0.45rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text-secondary);
+  font-size: 0.62rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.logoutBtn:hover {
+  border-color: var(--error);
+  color: var(--error);
+  background: var(--error-light);
+}
+
+/* ========== 480px — show brand text ========== */
+@media (min-width: 480px) {
+  .navbar {
+    gap: 0.4rem;
+    padding: 0.4rem 0.75rem;
+  }
+
+  .brandText {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+  }
+
+  .brandIcon {
+    width: 28px;
+    height: 28px;
+    min-width: 28px;
+  }
+
+  .navLink {
+    padding: 0.32rem 0.45rem;
+    font-size: 0.72rem;
+  }
+
+  .username {
+    display: block;
+  }
+
+  .avatarCircle {
+    width: 22px;
+    height: 22px;
+    font-size: 0.58rem;
+  }
+
+  .roleBadge {
+    font-size: 0.5rem;
+  }
+
+  .logoutBtn {
+    padding: 0.32rem 0.5rem;
+    font-size: 0.65rem;
+  }
+}
+
+/* ========== 640px ========== */
+@media (min-width: 640px) {
+  .navbar {
+    gap: 0.6rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .brandIcon {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+    border-radius: 7px;
+    font-size: 0.75rem;
+  }
+
+  .brandName {
+    font-size: 0.85rem;
+  }
+
+  .brandSub {
+    font-size: 0.5rem;
+  }
+
+  .navLinks {
+    gap: 0.1rem;
+  }
+
+  .navLink {
+    padding: 0.38rem 0.55rem;
+    font-size: 0.78rem;
+  }
+
+  .avatarCircle {
+    width: 24px;
+    height: 24px;
+    font-size: 0.62rem;
+  }
+
+  .userPill {
+    gap: 0.35rem;
+    padding: 0.3rem 0.55rem;
+  }
+
+  .userInfo {
+    gap: 0.35rem;
+  }
+
+  .username {
+    font-size: 0.7rem;
+  }
+
+  .roleBadge {
+    font-size: 0.52rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  .logoutBtn {
+    padding: 0.38rem 0.65rem;
+    font-size: 0.7rem;
+  }
+}
+
+/* ========== 768px ========== */
+@media (min-width: 768px) {
+  .navbar {
+    gap: 1rem;
+    padding: 0.6rem 1.25rem;
+    min-height: 60px;
+  }
+
+  .brandIcon {
+    width: 32px;
+    height: 32px;
+    min-width: 32px;
+    border-radius: 8px;
+    font-size: 0.8rem;
+  }
+
+  .brandName {
+    font-size: 0.95rem;
+  }
+
+  .brandSub {
+    font-size: 0.55rem;
+  }
+
+  .navLinks {
+    gap: 0.2rem;
+  }
+
+  .navLink {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.84rem;
+    border-radius: 7px;
+  }
+
+  .avatarCircle {
+    width: 26px;
+    height: 26px;
+    font-size: 0.68rem;
+  }
+
+  .userPill {
+    gap: 0.4rem;
+    padding: 0.35rem 0.65rem;
+  }
+
+  .userInfo {
+    gap: 0.4rem;
+  }
+
+  .username {
+    font-size: 0.75rem;
+  }
+
+  .roleBadge {
+    font-size: 0.56rem;
+    padding: 0.18rem 0.45rem;
+  }
+
+  .logoutBtn {
+    padding: 0.45rem 0.8rem;
+    font-size: 0.75rem;
+  }
+}
+
+/* ========== 1024px ========== */
+@media (min-width: 1024px) {
+  .navbar {
+    gap: 1.5rem;
+    padding: 0.75rem 2rem;
+    min-height: 64px;
+  }
+
+  .brand {
+    gap: 0.6rem;
+  }
+
+  .brandIcon {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 10px;
+    font-size: 0.85rem;
+  }
+
+  .brandName {
+    font-size: 1.05rem;
+  }
+
+  .brandSub {
+    font-size: 0.6rem;
+  }
+
+  .navLinks {
+    gap: 0.4rem;
+  }
+
+  .navLink {
+    padding: 0.55rem 0.9rem;
+    font-size: 0.9rem;
+    border-radius: 8px;
+  }
+
+  .avatarCircle {
+    width: 30px;
+    height: 30px;
+    font-size: 0.78rem;
+  }
+
+  .userPill {
+    gap: 0.5rem;
+    padding: 0.4rem 0.75rem;
+  }
+
+  .userInfo {
+    gap: 0.5rem;
+  }
+
+  .username {
+    font-size: 0.8rem;
+  }
+
+  .roleBadge {
+    font-size: 0.62rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .logoutBtn {
+    padding: 0.55rem 0.9rem;
+    font-size: 0.8rem;
+    border-radius: 8px;
+  }
+}
+
+/* ========== 1440px ========== */
+@media (min-width: 1440px) {
+  .navbar {
+    gap: 2rem;
+    padding: 1rem 2.5rem;
+  }
+
+  .navLink {
+    padding: 0.6rem 1rem;
+    font-size: 0.95rem;
+  }
+
+  .logoutBtn {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+}
+@media (max-width: 767px) {
+  .brandText,
+  .username,
+  .roleBadge {
+    display: none;
+  }
+
+  .navLink {
+    padding: 0.3rem;
+    font-size: 0.65rem;
+  }
+
+  .logoutBtn {
+    padding: 0.3rem 0.45rem;
+    font-size: 0.65rem;
+  }
+}
