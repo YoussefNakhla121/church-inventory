@@ -1,6 +1,9 @@
 import styles from './ItemCard.module.css';
+import { useAuth } from '../context/AuthContext';
 
 export default function ItemCard({ item, actions, children }) {
+  const { user } = useAuth();
+  const showPrice = user?.role === 'manager';
   const { name, description, total_quantity, category, photo_url, is_active, price } = item;
 
   return (
@@ -34,10 +37,12 @@ export default function ItemCard({ item, actions, children }) {
             <span className={styles.qtyLabel}>Total Stock</span>
             <span className={styles.qtyValue}>{total_quantity} units</span>
           </div>
-          <div className={styles.infoRow}>
-            <span className={styles.qtyLabel}>Price</span>
-            <span className={styles.qtyValue}>${price?.toFixed(2) ?? '0.00'}</span>
-          </div>
+          {showPrice && (
+            <div className={styles.infoRow}>
+              <span className={styles.qtyLabel}>Price</span>
+              <span className={styles.qtyValue}>${price?.toFixed(2) ?? '0.00'}</span>
+            </div>
+          )}
         </div>
 
         {children && <div>{children}</div>}

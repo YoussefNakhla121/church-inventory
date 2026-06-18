@@ -23,7 +23,11 @@ const getItems = async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
 
-    return res.status(200).json(data);
+    const items = req.user?.role === 'requester'
+      ? (data || []).map(({ price, ...item }) => item)
+      : data;
+
+    return res.status(200).json(items);
   } catch (err) {
     console.error('getItems error:', err);
     return res.status(500).json({ error: 'Internal server error' });
