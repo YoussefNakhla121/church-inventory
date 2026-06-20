@@ -140,6 +140,20 @@ export default function ProfileEdit() {
               Cancel
             </button>
           </div>
+
+          {user?.role === 'manager' && (
+            <div className={styles.managerSection}>
+              <div className={styles.divider} />
+              <p className={styles.managerSectionTitle}>Manager Tools</p>
+              <button
+                type="button"
+                className={styles.createManagerBtn}
+                onClick={() => navigate('/manager/create-account')}
+              >
+                ➕ Create Manager Account
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </div>

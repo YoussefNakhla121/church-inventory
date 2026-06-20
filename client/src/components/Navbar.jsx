@@ -31,7 +31,7 @@ export default function Navbar() {
       </Link>
 
       <button
-        className={styles.hamburger}
+        className={`${styles.hamburger} ${mobileOpen ? styles.hamburgerOpen : ''}`}
         aria-label={mobileOpen ? 'Close navigation' : 'Open navigation'}
         aria-expanded={mobileOpen}
         onClick={() => setMobileOpen((s) => !s)}
@@ -117,21 +117,12 @@ export default function Navbar() {
                 My Requests
               </NavLink>
             </li>
-            <li>
-              <NavLink
-                to="/manager/create-account"
-                className={({ isActive }) => `${styles.navLink} ${isActive ? styles.activeLink : ''}`}
-                onClick={handleNavClick}
-              >
-                Create Manager
-              </NavLink>
-            </li>
           </>
         )}
-
       </ul>
 
-      <div className={styles.userInfoMobile}>
+      {/* Mobile user info — rendered after navLinks */}
+      <div className={`${styles.userInfoMobile} ${mobileOpen ? styles.userInfoMobileOpen : ''}`}>
         <button 
           onClick={handleProfileClick}
           className={styles.userPillButton}
@@ -139,12 +130,12 @@ export default function Navbar() {
           <div className={styles.userPill}>
             <div className={styles.avatarCircle}>{initials}</div>
             <span className={styles.username}>{user?.username}</span>
-
           </div>
         </button>
         <button onClick={() => { logout(); handleNavClick(); }} className={styles.logoutBtn}>Logout</button>
       </div>
 
+      {/* Desktop user info — always in the top bar */}
       <div className={styles.userInfo}>
         <button 
           onClick={handleProfileClick}
@@ -153,7 +144,6 @@ export default function Navbar() {
           <div className={styles.userPill}>
             <div className={styles.avatarCircle}>{initials}</div>
             <span className={styles.username}>{user?.username}</span>
-
           </div>
         </button>
         <button onClick={logout} className={styles.logoutBtn}>Logout</button>
