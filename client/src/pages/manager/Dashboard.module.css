@@ -18,9 +18,6 @@
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
-  background: linear-gradient(135deg, var(--text-primary) 30%, var(--primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
@@ -30,16 +27,15 @@
 }
 
 .filterBar {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
+  background: #ffffff;
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 1.25rem;
   display: flex;
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
+  box-shadow: var(--shadow-sm);
 }
 
 .filterLabel {
@@ -55,7 +51,7 @@
 }
 
 .filterBtn {
-  background: var(--bg-input);
+  background: var(--bg-root);
   border: 1px solid var(--border);
   color: var(--text-secondary);
   padding: 0.5rem 1rem;
@@ -68,7 +64,7 @@
 }
 
 .filterBtn:hover {
-  background: var(--bg-card-hover);
+  background: var(--bg-elevated);
   color: var(--text-primary);
   border-color: var(--border-hover);
 }
@@ -86,12 +82,11 @@
 }
 
 .tableContainer {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
+  background: #ffffff;
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .table {
@@ -102,7 +97,7 @@
 }
 
 .th {
-  background-color: rgba(255, 255, 255, 0.02);
+  background-color: #f0e8dc;
   color: var(--text-secondary);
   font-weight: 600;
   padding: 1rem 1.5rem;
@@ -120,7 +115,7 @@
 }
 
 .tr:hover {
-  background-color: rgba(255, 255, 255, 0.015);
+  background-color: #faf6f0;
 }
 
 .requesterInfo {
@@ -135,7 +130,7 @@
 }
 
 .requesterPhone {
-  color: var(--accent);
+  color: var(--primary);
   font-size: 0.8rem;
   display: inline-flex;
   align-items: center;
@@ -168,7 +163,7 @@
 }
 
 .actionBtn {
-  background-color: var(--bg-input);
+  background-color: var(--bg-root);
   border: 1px solid var(--border);
   color: var(--primary);
   padding: 0.5rem 0.75rem;

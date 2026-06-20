@@ -20,20 +20,20 @@
 }
 
 /* Status colours */
-.approved  { background: rgba(16,185,129,0.15);  color: #10b981; }
-.approved .dot  { background: #10b981; animation: pulse-glow 2s infinite; }
+.approved  { background: #dbeafe;  color: #1e40af; }
+.approved .dot  { background: #1e40af; animation: pulse-glow 2s infinite; }
 
-.prepared  { background: rgba(59,130,246,0.15);  color: #60a5fa; }
-.prepared .dot  { background: #60a5fa; }
+.prepared  { background: rgba(212, 132, 90, 0.15);  color: #a8521f; }
+.prepared .dot  { background: #a8521f; }
 
-.completed { background: rgba(99,102,241,0.15);  color: #818cf8; }
-.completed .dot { background: #818cf8; }
+.completed { background: rgba(90, 138, 106, 0.15);  color: #3d6b4f; }
+.completed .dot { background: #3d6b4f; }
 
-.cancelled { background: rgba(100,116,139,0.15); color: #94a3b8; }
-.cancelled .dot { background: #94a3b8; }
+.cancelled { background: rgba(139, 110, 92, 0.12); color: #5c4033; }
+.cancelled .dot { background: #5c4033; }
 
-.rejected  { background: rgba(239,68,68,0.15);   color: #f87171; }
-.rejected .dot  { background: #f87171; }
+.rejected  { background: rgba(192, 57, 43, 0.12);   color: #c0392b; }
+.rejected .dot  { background: #c0392b; }
 
-.pending   { background: rgba(245,158,11,0.15);  color: #fbbf24; }
-.pending .dot   { background: #fbbf24; }
+.pending   { background: rgba(212, 132, 90, 0.15);  color: #d4845a; }
+.pending .dot   { background: #d4845a; }

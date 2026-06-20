@@ -33,9 +33,6 @@
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
-  background: linear-gradient(135deg, var(--text-primary) 30%, var(--primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
@@ -45,12 +42,11 @@
 }
 
 .card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
+  background: #ffffff;
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 2rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .form {

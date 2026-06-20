@@ -35,9 +35,6 @@
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
-  background: linear-gradient(135deg, var(--text-primary) 30%, var(--primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .metaInfo {
@@ -71,12 +68,11 @@
 }
 
 .card {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
+  background: #ffffff;
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .sectionTitle {
@@ -113,14 +109,14 @@
 }
 
 .phoneLink {
-  color: var(--accent);
+  color: var(--primary);
   text-decoration: none;
   font-weight: 600;
   transition: color var(--transition-fast);
 }
 
 .phoneLink:hover {
-  color: var(--accent-hover);
+  color: var(--primary-hover);
 }
 
 .itemsList {
@@ -133,7 +129,7 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  background-color: var(--bg-input);
+  background-color: var(--bg-root);
   padding: 0.75rem;
   border-radius: var(--radius-md);
   border: 1px solid var(--border);
@@ -150,7 +146,7 @@
 .itemPlaceholder {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, rgba(124,58,237,0.1), rgba(245,158,11,0.05));
+  background: linear-gradient(135deg, rgba(196, 98, 45, 0.1), rgba(212, 132, 90, 0.05));
   display: flex;
   justify-content: center;
   align-items: center;
@@ -200,7 +196,7 @@
 
 .statusSelect {
   width: 100%;
-  background: var(--bg-input);
+  background: white;
   border: 1px solid var(--border);
   color: var(--text-primary) !important;
   padding: 0.6rem 1rem;
@@ -249,7 +245,7 @@
 }
 
 .reportItem {
-  background-color: var(--bg-input);
+  background-color: var(--bg-root);
   border: 1px solid var(--border);
   padding: 0.75rem 1rem;
   border-radius: var(--radius-md);

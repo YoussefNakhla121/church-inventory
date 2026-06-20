@@ -18,9 +18,6 @@
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
-  background: linear-gradient(135deg, var(--text-primary) 30%, var(--primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
@@ -46,20 +43,19 @@
 }
 
 .requestCard {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
+  background: #ffffff;
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
   transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  box-shadow: var(--shadow-sm);
 }
 
 .requestCard:hover {
-  border-color: var(--border-hover);
+  border-color: rgba(196, 98, 45, 0.3);
   box-shadow: var(--shadow-md);
 }
 
@@ -117,7 +113,7 @@
 }
 
 .itemTag {
-  background: var(--bg-input);
+  background: var(--bg-root);
   border: 1px solid var(--border);
   padding: 0.25rem 0.625rem;
   border-radius: var(--radius-sm);

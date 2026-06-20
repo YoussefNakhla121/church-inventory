@@ -33,9 +33,6 @@
   font-weight: 800;
   color: var(--text-primary);
   margin: 0;
-  background: linear-gradient(135deg, var(--text-primary) 30%, var(--primary) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
 }
 
 .subtitle {
@@ -51,15 +48,14 @@
 }
 
 .reportCard {
-  background: var(--glass-bg);
-  backdrop-filter: var(--glass-blur);
-  -webkit-backdrop-filter: var(--glass-blur);
-  border: 1px solid var(--glass-border);
+  background: #ffffff;
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  box-shadow: var(--shadow-sm);
 }
 
 .cardHeader {
@@ -101,7 +97,7 @@
   color: var(--text-primary);
   margin: 0;
   font-style: italic;
-  background-color: var(--bg-input);
+  background-color: white;
   padding: 0.75rem 1rem;
   border-radius: var(--radius-sm);
   border-left: 3px solid var(--primary);
@@ -136,7 +132,7 @@
   text-align: center;
   color: var(--text-secondary);
   padding: 4rem 2rem;
-  background: var(--bg-card);
+  background: var(--bg-root);
   border-radius: var(--radius-lg);
   border: 2px dashed var(--border);
 }

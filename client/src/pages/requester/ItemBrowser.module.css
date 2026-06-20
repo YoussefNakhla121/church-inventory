@@ -14,8 +14,8 @@
   flex-wrap: wrap;
   margin-bottom: 2.5rem;
   padding: 2rem 2.5rem;
-  background: linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(245,158,11,0.06) 100%);
-  border: 1px solid rgba(124,58,237,0.2);
+  background: linear-gradient(135deg, rgba(196, 98, 45, 0.1) 0%, rgba(212, 132, 90, 0.05) 100%);
+  border: 1px solid rgba(196, 98, 45, 0.15);
   border-radius: var(--radius-xl);
 }
 
@@ -30,7 +30,7 @@
 }
 
 .heroTitle span {
-  background: linear-gradient(135deg, var(--primary), #a855f7);
+  background: linear-gradient(135deg, #c4622d, #d4845a);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -47,7 +47,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.85rem 1.75rem;
-  background: linear-gradient(135deg, var(--primary), #a855f7);
+  background: #c4622d;
   color: white;
   border-radius: var(--radius-md);
   font-size: 0.95rem;
@@ -76,7 +76,7 @@
   flex: 1;
   min-width: 220px;
   padding: 0.7rem 1rem;
-  background: var(--bg-input);
+  background: white;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
@@ -86,16 +86,16 @@
 
 .searchInput:focus {
   outline: none;
-  border-color: var(--border-focus);
-  background: var(--bg-input-focus);
-  box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(196, 98, 45, 0.1);
 }
 
 .searchInput::placeholder { color: var(--text-muted); }
 
 .categorySelect {
   padding: 0.7rem 1rem;
-  background: var(--bg-input);
+  background: white;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
@@ -107,8 +107,8 @@
 
 .categorySelect:focus {
   outline: none;
-  border-color: var(--border-focus);
-  background: var(--bg-input-focus);
+  border-color: var(--primary);
+  background: white;
 }
 
 .countLabel {

@@ -1,9 +1,10 @@
 /* CommentThread.module.css */
 .threadContainer {
-  background: var(--glass-bg);
-  border: 1px solid var(--glass-border);
+  background: #ffffff;
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
   overflow: hidden;
+  box-shadow: var(--shadow-sm);
 }
 
 .title {
@@ -55,7 +56,7 @@
 
 .myComment {
   background: var(--primary-light);
-  border: 1px solid rgba(124,58,237,0.25);
+  border: 1px solid rgba(196, 98, 45, 0.25);
   align-self: flex-end;
 }
 
@@ -80,7 +81,6 @@
 }
 
 .myComment .author { color: var(--primary); }
-.otherComment .author { color: var(--text-secondary); }
 
 .date {
   font-size: 0.68rem;
@@ -117,7 +117,7 @@
   width: 100%;
   min-height: 70px;
   padding: 0.65rem 0.85rem;
-  background: var(--bg-input);
+  background: white;
   border: 1px solid var(--border);
   border-radius: var(--radius-sm);
   color: var(--text-primary);
@@ -129,8 +129,8 @@
 
 .textarea:focus {
   outline: none;
-  border-color: var(--border-focus);
-  background: var(--bg-input-focus);
+  border-color: var(--primary);
+  background: white;
 }
 
 .textarea::placeholder { color: var(--text-muted); }

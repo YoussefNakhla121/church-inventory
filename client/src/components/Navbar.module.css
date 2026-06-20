@@ -9,11 +9,9 @@
   gap: 0.25rem;
   padding: 0.4rem 0.6rem;
   min-height: 52px;
-  background: rgba(10, 15, 30, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  box-shadow: 0 1px 20px rgba(0, 0, 0, 0.4);
+  background: #2c1810;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 20px rgba(0, 0, 0, 0.1);
   width: 100%;
   box-sizing: border-box;
   overflow: hidden;
@@ -40,7 +38,7 @@
   width: 26px;
   height: 26px;
   min-width: 26px;
-  background: linear-gradient(135deg, var(--primary), #a855f7);
+  background: linear-gradient(135deg, #c4622d, #d4845a);
   border-radius: 6px;
   display: flex;
   align-items: center;
@@ -99,7 +97,7 @@
   border-radius: 6px;
   font-size: 0.68rem;
   font-weight: 500;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.7);
   text-decoration: none;
   transition: all var(--transition-fast);
   white-space: nowrap;
@@ -111,13 +109,13 @@
 }
 
 .navLink:hover {
-  color: var(--text-primary);
-  background: rgba(255, 255, 255, 0.04);
+  color: white;
+  background: rgba(255, 255, 255, 0.08);
 }
 
 .activeLink {
-  color: var(--primary) !important;
-  background: var(--primary-light) !important;
+  color: white !important;
+  background: rgba(196, 98, 45, 0.3) !important;
 }
 
 /* ========== USER INFO ========== */
@@ -137,8 +135,8 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 24px;
   padding: 0.25rem 0.4rem;
   flex-shrink: 0;
@@ -157,14 +155,14 @@
 
 .userPillButton:hover .userPill {
   background: rgba(255, 255, 255, 0.1);
-  border-color: var(--primary);
+  border-color: #c4622d;
 }
 
 .avatarCircle {
   width: 20px;
   height: 20px;
   min-width: 20px;
-  background: linear-gradient(135deg, var(--primary), #a855f7);
+  background: linear-gradient(135deg, #c4622d, #d4845a);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -181,7 +179,7 @@
   display: none;
   font-size: 0.65rem;
   font-weight: 600;
-  color: var(--text-primary);
+  color: rgba(255, 255, 255, 0.9);
   white-space: nowrap;
 }
 
@@ -197,21 +195,21 @@
 }
 
 .roleManager {
-  background: var(--accent-light);
-  color: var(--accent);
+  background: rgba(212, 132, 90, 0.25);
+  color: #d4845a;
 }
 
 .roleRequester {
-  background: var(--primary-light);
-  color: var(--primary);
+  background: rgba(196, 98, 45, 0.25);
+  color: #f0a882;
 }
 
 .logoutBtn {
   padding: 0.28rem 0.45rem;
   background: transparent;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 6px;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.6);
   font-size: 0.62rem;
   font-weight: 500;
   cursor: pointer;
@@ -221,9 +219,9 @@
 }
 
 .logoutBtn:hover {
-  border-color: var(--error);
-  color: var(--error);
-  background: var(--error-light);
+  border-color: #c4622d;
+  color: #c4622d;
+  background: rgba(196, 98, 45, 0.15);
 }
 
 /* ========== 480px — show brand text ========== */

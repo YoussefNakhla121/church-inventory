@@ -3,7 +3,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #0a0f1e;
+  background: var(--bg-root);
   padding: 2rem 1.5rem;
 }
 
@@ -15,12 +15,11 @@
 
 .card {
   width: 100%;
-  background: rgba(10, 15, 30, 0.8);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #ffffff;
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 2rem;
-  backdrop-filter: blur(10px);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-sm);
 }
 
 .header {
@@ -63,7 +62,7 @@
 .input,
 .select {
   padding: 0.75rem 1rem;
-  background: var(--bg-input);
+  background: white;
   border: 1px solid var(--border);
   border-radius: 8px;
   color: var(--text-primary);
@@ -79,9 +78,9 @@
 .input:focus,
 .select:focus {
   outline: none;
-  border-color: var(--border-focus);
-  background: var(--bg-input-focus);
-  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.12);
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(196, 98, 45, 0.12);
 }
 
 .input:disabled,
@@ -96,7 +95,7 @@
 
 .button {
   padding: 0.85rem;
-  background: linear-gradient(135deg, var(--primary), #a855f7);
+  background: #c4622d;
   color: white;
   border: none;
   border-radius: 8px;
@@ -110,7 +109,7 @@
 
 .button:hover:not(:disabled) {
   transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(124, 58, 237, 0.4);
+  box-shadow: 0 8px 24px rgba(196, 98, 45, 0.25);
 }
 
 .button:disabled {
