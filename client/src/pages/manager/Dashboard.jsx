@@ -138,10 +138,10 @@ export default function Dashboard() {
                         ))}
                       </div>
                     </td>
-                    <td className={styles.td}>
+                    <td className={`${styles.td} ${styles.statusTd}`}>
                       <RequestStatusBadge status={req.status} />
                     </td>
-                    <td className={styles.td}>
+                    <td className={`${styles.td} ${styles.actionTd}`}>
                       <Link to={`/manager/requests/${req.id}`} className={styles.actionBtn}>
                         Manage &rarr;
                       </Link>
