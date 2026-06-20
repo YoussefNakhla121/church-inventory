@@ -55,8 +55,26 @@ export default function Dashboard() {
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>Manager Dashboard</h1>
-        <p className={styles.subtitle}>Review reservation requests, coordinate pickups, and log condition reports.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <h1 className={styles.title}>Manager Dashboard</h1>
+            <p className={styles.subtitle}>Review reservation requests, coordinate pickups, and log condition reports.</p>
+          </div>
+          <Link to="/manager/create-account" style={{ textDecoration: 'none' }}>
+            <button style={{ 
+              padding: '10px 16px', 
+              backgroundColor: '#3b82f6', 
+              color: 'white', 
+              border: 'none', 
+              borderRadius: '6px', 
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '500'
+            }}>
+              + Create Manager
+            </button>
+          </Link>
+        </div>
       </div>
 
       {error && <div className={styles.error}>{error}</div>}

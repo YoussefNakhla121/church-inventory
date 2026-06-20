@@ -98,6 +98,34 @@ export default function Navbar() {
                 Manage Items
               </NavLink>
             </li>
+            <li>
+              <NavLink
+                to="/requests/new"
+                className={({ isActive }) => `${styles.navLink} ${isActive ? styles.activeLink : ''}`}
+                onClick={handleNavClick}
+              >
+                Special Request
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/requests"
+                end
+                className={({ isActive }) => `${styles.navLink} ${isActive ? styles.activeLink : ''}`}
+                onClick={handleNavClick}
+              >
+                My Requests
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/manager/create-account"
+                className={({ isActive }) => `${styles.navLink} ${isActive ? styles.activeLink : ''}`}
+                onClick={handleNavClick}
+              >
+                Create Manager
+              </NavLink>
+            </li>
           </>
         )}
 

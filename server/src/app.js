@@ -12,8 +12,22 @@ const app = express();
 
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
+const allowedOrigins = [
+  'https://church-inventory-ten.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:3000',
+  'http://127.0.0.1:5173',
+  'http://127.0.0.1:3000'
+];
+
 app.use(cors({
-  origin: 'https://church-inventory-ten.vercel.app'
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  }
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));

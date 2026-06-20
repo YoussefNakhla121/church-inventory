@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { getItems, getItemAvailability } from '../../api/items';
 import { createRequest } from '../../api/requests';
+import ImageLightbox from '../../components/ImageLightbox';
 import styles from './NewRequest.module.css';
 
 export default function NewRequest() {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   // Wizard state: 1 = Pick Dates, 2 = Select Items, 3 = Review & Submit
   const [step, setStep] = useState(1);
@@ -14,11 +17,15 @@ export default function NewRequest() {
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
   const [notes, setNotes] = useState('');
+  const [gradegroup, setGradegroup] = useState('');
 
   // Item catalogs and availability
   const [catalogItems, setCatalogItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState({}); // { item_id: quantity }
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Lightbox state
+  const [lightbox, setLightbox] = useState({ isOpen: false, src: '', alt: '' });
   
   // UI States
   const [loading, setLoading] = useState(false);
@@ -145,6 +152,12 @@ export default function NewRequest() {
       return;
     }
 
+    // Validate gradegroup for managers
+    if (user?.role === 'manager' && !gradegroup.trim()) {
+      setError('Grade Group is required for managers.');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
@@ -171,6 +184,11 @@ export default function NewRequest() {
         notes: notes.trim() || null,
         items: itemsPayload,
       };
+
+      // Add gradegroup for managers
+      if (user?.role === 'manager') {
+        payload.gradegroup = gradegroup;
+      }
 
       const response = await createRequest(payload);
 
@@ -434,7 +452,13 @@ export default function NewRequest() {
                         <div key={item.id} className={`${styles.itemCard} ${selectedQty > 0 ? styles.itemCardSelected : ''}`}>
                           <div className={styles.itemImageContainer}>
                             {item.photo_url ? (
-                              <img src={item.photo_url} alt={item.name} className={styles.itemImage} />
+                              <img
+                                src={item.photo_url}
+                                alt={item.name}
+                                className={styles.itemImage}
+                                onClick={() => setLightbox({ isOpen: true, src: item.photo_url, alt: item.name })}
+                                style={{ cursor: 'zoom-in' }}
+                              />
                             ) : (
                               <div className={styles.itemPlaceholder}>📦</div>
                             )}
@@ -539,6 +563,25 @@ export default function NewRequest() {
               </div>
 
               <div className={styles.inputGroup} style={{ marginTop: '1rem' }}>
+                <label className={styles.label}>Grade Group {user?.role === 'manager' && <span style={{ color: 'var(--error)' }}>*</span>}</label>
+                {user?.role === 'manager' ? (
+                  <select
+                    className={styles.input}
+                    value={gradegroup}
+                    onChange={(e) => setGradegroup(e.target.value)}
+                    required
+                  >
+                    <option value="">Select a grade group...</option>
+                    <option value="اول و تاني">اول و تاني</option>
+                    <option value="تلاته و رابعه">تلاته و رابعه</option>
+                    <option value="خامسه و سادسه">خامسه و سادسه</option>
+                    <option value="اعدادي">اعدادي</option>
+                    <option value="ثانوي">ثانوي</option>
+                  </select>
+                ) : null}
+              </div>
+
+              <div className={styles.inputGroup} style={{ marginTop: '1rem' }}>
                 <label className={styles.label}>Notes / Special Requests (Optional)</label>
                 <textarea
                   className={styles.textarea}
@@ -567,6 +610,13 @@ export default function NewRequest() {
           )}
         </div>
       )}
+
+      <ImageLightbox
+        src={lightbox.src}
+        alt={lightbox.alt}
+        isOpen={lightbox.isOpen}
+        onClose={() => setLightbox({ isOpen: false, src: '', alt: '' })}
+      />
     </div>
   );
 }

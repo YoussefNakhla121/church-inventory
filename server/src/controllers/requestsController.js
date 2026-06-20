@@ -9,11 +9,11 @@ const MAX_ADVANCE_DAYS = 90;
 /**
  * POST /api/requests
  * Any authenticated user. Calls the Postgres RPC 'create_request'.
- * Body: { start_time, end_time, notes, items: [{ item_id, quantity_requested }] }
+ * Body: { start_time, end_time, notes, items: [{ item_id, quantity_requested }], gradegroup (optional, required for managers) }
  */
 const createRequest = async (req, res) => {
   try {
-    const { start_time, end_time, notes, items } = req.body;
+    const { start_time, end_time, notes, items, gradegroup } = req.body;
 
     // ── Validate required fields ──────────────────────────────────────────────
     if (!start_time || !end_time || !items) {
@@ -29,6 +29,13 @@ const createRequest = async (req, res) => {
         return res
           .status(400)
           .json({ error: 'Each item must have item_id and quantity_requested >= 1' });
+      }
+    }
+
+    // ── Validate gradegroup for managers ──────────────────────────────────────
+    if (req.user.role === 'manager') {
+      if (!gradegroup || gradegroup.trim() === '') {
+        return res.status(400).json({ error: 'Gradegroup is required for managers' });
       }
     }
 
@@ -63,6 +70,7 @@ const createRequest = async (req, res) => {
       p_end_time: end.toISOString(),
       p_notes: notes || null,
       p_items: items,
+      p_gradegroup: gradegroup ?? null,
     });
 
     if (error) return res.status(500).json({ error: error.message });

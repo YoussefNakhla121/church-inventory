@@ -1,10 +1,16 @@
 import styles from './ItemCard.module.css';
 import { useAuth } from '../context/AuthContext';
 
-export default function ItemCard({ item, actions, children }) {
+export default function ItemCard({ item, actions, children, onPhotoClick }) {
   const { user } = useAuth();
   const showPrice = user?.role === 'manager';
   const { name, description, total_quantity, category, photo_url, is_active, price } = item;
+
+  const handlePhotoClick = () => {
+    if (onPhotoClick && photo_url) {
+      onPhotoClick();
+    }
+  };
 
   return (
     <div className={styles.card}>
@@ -16,7 +22,13 @@ export default function ItemCard({ item, actions, children }) {
         )}
         {photo_url ? (
           <>
-            <img src={photo_url} alt={name} className={styles.image} />
+            <img
+              src={photo_url}
+              alt={name}
+              className={styles.image}
+              onClick={handlePhotoClick}
+              style={{ cursor: onPhotoClick ? 'zoom-in' : 'default' }}
+            />
             <div className={styles.imageGradient} />
           </>
         ) : (

@@ -70,14 +70,6 @@ export default function Register() {
                 required disabled={loading} autoComplete="tel" />
             </div>
             <div className={styles.inputGroup}>
-              <label className={styles.label} htmlFor="role">Account Type</label>
-              <select id="role" className={styles.select} value={role}
-                onChange={(e) => setRole(e.target.value)} required disabled={loading}>
-                <option value="requester">Requester (Church Member)</option>
-                <option value="manager">Manager (Inventory Administrator)</option>
-              </select>
-            </div>
-            <div className={styles.inputGroup}>
               <label className={styles.label} htmlFor="gradeGroup">Grade Group</label>
               <select id="gradeGroup" className={styles.select} value={gradegroup}
                 onChange={(e) => setGradeGroup(e.target.value)} required disabled={loading}>

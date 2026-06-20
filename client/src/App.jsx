@@ -24,6 +24,7 @@ import ConditionReport from './pages/manager/ConditionReport';
 import ItemManagement from './pages/manager/ItemManagement';
 import ItemForm from './pages/manager/ItemForm';
 import ItemConditionHistory from './pages/manager/ItemConditionHistory';
+import CreateManagerAccount from './pages/manager/CreateManagerAccount';
 
 export default function App() {
   return (
@@ -87,6 +88,14 @@ export default function App() {
                 element={
                   <ManagerRoute>
                     <ManagerDashboard />
+                  </ManagerRoute>
+                }
+              />
+              <Route
+                path="/manager/create-account"
+                element={
+                  <ManagerRoute>
+                    <CreateManagerAccount />
                   </ManagerRoute>
                 }
               />

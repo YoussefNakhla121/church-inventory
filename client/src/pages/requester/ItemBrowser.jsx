@@ -1,15 +1,19 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { getItems } from '../../api/items';
 import ItemCard from '../../components/ItemCard';
+import ImageLightbox from '../../components/ImageLightbox';
 import styles from './ItemBrowser.module.css';
 
 export default function ItemBrowser() {
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
+  const [lightbox, setLightbox] = useState({ isOpen: false, src: '', alt: '' });
 
   useEffect(() => {
     const fetchItems = async () => {
@@ -65,11 +69,13 @@ export default function ItemBrowser() {
             Browse <span>Inventory</span>
           </h1>
           <p className={styles.heroSub}>
-            Explore all available items. Ready to reserve? Start a request and pick your dates &amp; items.
+            {user?.role === 'manager' 
+              ? 'Explore all available items. Ready to create a special request? Pick your dates & items.'
+              : 'Explore all available items. Ready to reserve? Start a request and pick your dates & items.'}
           </p>
         </div>
         <Link to="/requests/new" className={styles.heroAction}>
-          📅 Start a Reservation →
+          📅 {user?.role === 'manager' ? 'Create Special Request →' : 'Start a Reservation →'}
         </Link>
       </div>
 
@@ -106,10 +112,21 @@ export default function ItemBrowser() {
           </div>
         ) : (
           filteredItems.map(item => (
-            <ItemCard key={item.id} item={item} />
+            <ItemCard
+              key={item.id}
+              item={item}
+              onPhotoClick={() => setLightbox({ isOpen: true, src: item.photo_url, alt: item.name })}
+            />
           ))
         )}
       </div>
+
+      <ImageLightbox
+        src={lightbox.src}
+        alt={lightbox.alt}
+        isOpen={lightbox.isOpen}
+        onClose={() => setLightbox({ isOpen: false, src: '', alt: '' })}
+      />
     </div>
   );
 }
