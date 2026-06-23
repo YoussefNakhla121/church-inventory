@@ -1,4 +1,9 @@
 const supabase = require('../config/supabase');
+const {
+  notifyManagersNewRequest,
+  notifyRequesterRequestCreated,
+  notifyRequesterStatusChange,
+} = require('../utils/emails');
 
 // All valid statuses a manager can assign
 const VALID_STATUSES = ['approved', 'prepared', 'completed', 'cancelled', 'rejected'];
@@ -77,7 +82,48 @@ const createRequest = async (req, res) => {
 
     // RPC returns { success, request_id } on approval or { success, conflicts } on rejection
     const statusCode = data.success ? 201 : 409;
-    return res.status(statusCode).json(data);
+    res.status(statusCode).json(data);
+
+    // ── Fire-and-forget email notifications ──────────────────────────────────
+    try {
+      const requestData = {
+        ...data,
+        start_time,
+        end_time,
+        notes: notes || null,
+        GradeGroup: gradegroup ?? null,
+        status: data.success ? 'approved' : 'rejected',
+      };
+
+      const [managersResult, requesterResult, itemNamesResult] = await Promise.all([
+        supabase.from('users').select('id, username, phone').eq('role', 'manager'),
+        supabase.from('users').select('id, username, phone').eq('id', req.user.id).single(),
+        supabase.from('items').select('id, name').in('id', items.map(i => i.item_id)),
+      ]);
+
+      if (managersResult.error || requesterResult.error || itemNamesResult.error) {
+        console.error('Email data fetch error:', managersResult.error || requesterResult.error || itemNamesResult.error);
+        return;
+      }
+
+      const managers = managersResult.data || [];
+      const requester = requesterResult.data;
+      const itemNameMap = {};
+      for (const item of (itemNamesResult.data || [])) {
+        itemNameMap[item.id] = item.name;
+      }
+      const emailItems = items.map(i => ({
+        name: itemNameMap[i.item_id] || 'Unknown Item',
+        quantity_requested: i.quantity_requested,
+      }));
+
+      Promise.all([
+        notifyManagersNewRequest(requestData, requester, managers, emailItems),
+        notifyRequesterRequestCreated(requestData, requester, emailItems),
+      ]).catch(err => console.error('Email error:', err));
+    } catch (emailErr) {
+      console.error('Email error:', emailErr);
+    }
   } catch (err) {
     console.error('createRequest error:', err);
     return res.status(500).json({ error: 'Internal server error' });
@@ -274,7 +320,51 @@ const updateRequestStatus = async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
 
-    return res.status(200).json(data);
+    res.status(200).json(data);
+
+    // ── Fire-and-forget email notification ────────────────────────────────────
+    try {
+      const { data: fullRequest, error: reqError } = await supabase
+        .from('requests')
+        .select(`
+          id, requester_id, start_time, end_time, notes, status,
+          GradeGroup,
+          request_items (
+            quantity_requested,
+            items ( id, name )
+          )
+        `)
+        .eq('id', id)
+        .single();
+
+      if (reqError) {
+        console.error('Email data fetch error:', reqError);
+        return;
+      }
+
+      const { data: requester, error: userError } = await supabase
+        .from('users')
+        .select('id, username, phone')
+        .eq('id', fullRequest.requester_id)
+        .single();
+
+      if (userError) {
+        console.error('Email data fetch error:', userError);
+        return;
+      }
+
+      const emailItems = (fullRequest.request_items || []).map(ri => ({
+        name: ri.items?.name || 'Unknown Item',
+        quantity_requested: ri.quantity_requested,
+      }));
+
+      const changedBy = req.user;
+
+      notifyRequesterStatusChange(fullRequest, requester, emailItems, changedBy)
+        .catch(err => console.error('Email error:', err));
+    } catch (emailErr) {
+      console.error('Email error:', emailErr);
+    }
   } catch (err) {
     console.error('updateRequestStatus error:', err);
     return res.status(500).json({ error: 'Internal server error' });
