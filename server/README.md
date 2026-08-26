@@ -34,6 +34,9 @@ cp .env.example .env
 | `SUPABASE_SERVICE_KEY`| Service role key (not the anon key)              |
 | `JWT_SECRET`          | A long, random secret string for signing JWTs    |
 | `PORT`                | Port to run the server on (default: `5000`)      |
+| `GMAIL_USER`          | Gmail account used for notification emails       |
+| `GMAIL_APP_PASSWORD`  | Gmail app password for notification emails       |
+| `MAIL_FROM_NAME`      | Display name used in notification email senders  |
 
 > ⚠️ Never commit `.env` to version control. The service role key bypasses all RLS policies.
 
@@ -53,12 +56,26 @@ npm start
 
 The server will start on `http://localhost:5000` (or your configured `PORT`).
 
+## Vercel Deployment
+
+The `api/index.js` adapter exports the Express app as a Vercel serverless function. Deploy from this directory so `vercel.json` and the server dependencies are used:
+
+```bash
+vercel login
+vercel
+vercel --prod
+```
+
+Set `SUPABASE_URL`, `SUPABASE_SERVICE_KEY`, `JWT_SECRET`, `GMAIL_USER`, `GMAIL_APP_PASSWORD`, and `MAIL_FROM_NAME` in the Vercel project environment settings. `PORT` is only needed for local development.
+
 ---
 
 ## Project Structure
 
 ```
 server/
+├── api/
+│   └── index.js                  # Vercel serverless function adapter
 ├── src/
 │   ├── index.js                  # Entry point
 │   ├── app.js                    # Express setup, middleware, route mounting
@@ -83,7 +100,8 @@ server/
 │       └── storage.js            # Supabase Storage upload helper
 ├── .env.example
 ├── .gitignore
-└── package.json
+├── package.json
+└── vercel.json
 ```
 
 ---
