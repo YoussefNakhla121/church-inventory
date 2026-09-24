@@ -83,6 +83,26 @@ function isValidEmail(email) {
   return re.test(String(email).toLowerCase());
 }
 
+function getGradegroupValue(request, fallbackUser = null) {
+  const candidates = [
+    request?.gradegroup,
+    request?.grade_group,
+    request?.gradeGroup,
+    request?.requester?.gradegroup,
+    fallbackUser?.gradegroup,
+    fallbackUser?.grade_group,
+    fallbackUser?.gradeGroup,
+  ];
+
+  for (const value of candidates) {
+    if (value !== null && value !== undefined && String(value).trim() !== '') {
+      return String(value).trim();
+    }
+  }
+
+  return 'N/A';
+}
+
 /**
  * Send one transactional email via Nodemailer + Gmail.
  */
@@ -126,7 +146,7 @@ async function notifyManagersNewRequest(request, requester, managers, items) {
     <p style="margin:0 0 16px;">A new reservation request has been submitted.</p>
     <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
       <tr><td style="padding:4px 8px;font-weight:600;">Requester:</td><td style="padding:4px 8px;">${requester.gmail} &mdash; ${requester.phone || 'N/A'}</td></tr>
-      <tr><td style="padding:4px 8px;font-weight:600;">Grade Group:</td><td style="padding:4px 8px;">${request.GradeGroup || request.gradegroup || 'N/A'}</td></tr>
+      <tr><td style="padding:4px 8px;font-weight:600;">Grade Group:</td><td style="padding:4px 8px;">${getGradegroupValue(request, requester)}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">From:</td><td style="padding:4px 8px;">${fmtDate(request.start_time)}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">To:</td><td style="padding:4px 8px;">${fmtDate(request.end_time)}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">Notes:</td><td style="padding:4px 8px;">${request.notes || 'None'}</td></tr>
@@ -187,7 +207,7 @@ async function notifyRequesterRequestCreated(request, requester, items) {
     <p style="margin:0 0 16px;">Your reservation request has been submitted successfully.</p>
     <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
       <tr><td style="padding:4px 8px;font-weight:600;">Status:</td><td style="padding:4px 8px;">${statusBadge(status)}</td></tr>
-      <tr><td style="padding:4px 8px;font-weight:600;">Grade Group:</td><td style="padding:4px 8px;">${request.GradeGroup || request.gradegroup || 'N/A'}</td></tr>
+      <tr><td style="padding:4px 8px;font-weight:600;">Grade Group:</td><td style="padding:4px 8px;">${getGradegroupValue(request, requester)}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">From:</td><td style="padding:4px 8px;">${fmtDate(request.start_time)}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">To:</td><td style="padding:4px 8px;">${fmtDate(request.end_time)}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">Notes:</td><td style="padding:4px 8px;">${request.notes || 'None'}</td></tr>
@@ -241,7 +261,7 @@ async function notifyRequesterStatusChange(request, requester, items, changedBy)
     <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
       <tr><td style="padding:4px 8px;font-weight:600;">New Status:</td><td style="padding:4px 8px;">${statusBadge(status)}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">Updated by:</td><td style="padding:4px 8px;">${changedBy.gmail}</td></tr>
-      <tr><td style="padding:4px 8px;font-weight:600;">Grade Group:</td><td style="padding:4px 8px;">${request.GradeGroup || request.gradegroup || 'N/A'}</td></tr>
+      <tr><td style="padding:4px 8px;font-weight:600;">Grade Group:</td><td style="padding:4px 8px;">${getGradegroupValue(request, requester)}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">From:</td><td style="padding:4px 8px;">${fmtDate(request.start_time)}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">To:</td><td style="padding:4px 8px;">${fmtDate(request.end_time)}</td></tr>
     </table>

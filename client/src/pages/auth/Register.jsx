@@ -9,7 +9,7 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState('requester');
-  const [gradegroup, setGradeGroup] = useState('');
+  const [gradegroup, setGradegroup] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -70,9 +70,9 @@ export default function Register() {
                 required disabled={loading} autoComplete="tel" />
             </div>
             <div className={styles.inputGroup}>
-              <label className={styles.label} htmlFor="gradeGroup">Grade Group</label>
-              <select id="gradeGroup" className={styles.select} value={gradegroup}
-                onChange={(e) => setGradeGroup(e.target.value)} required disabled={loading}>
+              <label className={styles.label} htmlFor="gradegroup">Grade Group</label>
+              <select id="gradegroup" className={styles.select} value={gradegroup}
+                onChange={(e) => setGradegroup(e.target.value)} required disabled={loading}>
                 <option value="">Select Grade Group</option>
                 <option value="اول و تاني">اول و تاني</option>
                 <option value="تلاته و رابعه">تلاته و رابعه</option>

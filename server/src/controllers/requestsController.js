@@ -86,18 +86,9 @@ const createRequest = async (req, res) => {
 
     // ── Fire-and-forget email notifications ──────────────────────────────────
     try {
-      const requestData = {
-        ...data,
-        start_time,
-        end_time,
-        notes: notes || null,
-        GradeGroup: gradegroup ?? null,
-        status: data.success ? 'approved' : 'rejected',
-      };
-
       const [managersResult, requesterResult, itemNamesResult] = await Promise.all([
-        supabase.from('users').select('id, gmail, phone').eq('role', 'manager'),
-        supabase.from('users').select('id, gmail, phone').eq('id', req.user.id).single(),
+        supabase.from('users').select('id, gmail, phone, gradegroup').eq('role', 'manager'),
+        supabase.from('users').select('id, gmail, phone, gradegroup').eq('id', req.user.id).single(),
         supabase.from('items').select('id, name').in('id', items.map(i => i.item_id)),
       ]);
 
@@ -108,6 +99,15 @@ const createRequest = async (req, res) => {
 
       const managers = managersResult.data || [];
       const requester = requesterResult.data;
+      const requestData = {
+        ...data,
+        start_time,
+        end_time,
+        notes: notes || null,
+        gradegroup: gradegroup ?? requester?.gradegroup ?? null,
+        status: data.success ? 'approved' : 'rejected',
+      };
+
       const itemNameMap = {};
       for (const item of (itemNamesResult.data || [])) {
         itemNameMap[item.id] = item.name;
@@ -328,7 +328,7 @@ const updateRequestStatus = async (req, res) => {
         .from('requests')
         .select(`
           id, requester_id, start_time, end_time, notes, status,
-          GradeGroup,
+          gradegroup,
           request_items (
             quantity_requested,
             items ( id, name )
