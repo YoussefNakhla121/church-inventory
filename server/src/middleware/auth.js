@@ -2,7 +2,7 @@ const jwt = require('jsonwebtoken');
 
 /**
  * Verifies the JWT Bearer token on every protected route.
- * On success, attaches the decoded payload to req.user: { id, username, role }
+ * On success, attaches the decoded payload to req.user: { id, gmail, role }
  */
 const auth = (req, res, next) => {
   const authHeader = req.headers.authorization;

@@ -9,7 +9,7 @@ export default function ProfileEdit() {
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
-    username: '',
+    gmail: '',
     phone: '',
     gradegroup: '',
   });
@@ -20,7 +20,7 @@ export default function ProfileEdit() {
   useEffect(() => {
     if (user) {
       setFormData({
-        username: user.username || '',
+        gmail: user.gmail || '',
         phone: user.phone || '',
         gradegroup: user.gradegroup || '',
       });
@@ -41,7 +41,7 @@ export default function ProfileEdit() {
     const isManager = user?.role === 'manager';
     
     // For requesters, all fields are required. For managers, gradegroup is not required
-    if (!formData.username.trim() || !formData.phone.trim() || (!isManager && !formData.gradegroup.trim())) {
+    if (!formData.gmail.trim() || !formData.phone.trim() || (!isManager && !formData.gradegroup.trim())) {
       setError('All fields are required');
       return;
     }
@@ -76,13 +76,13 @@ export default function ProfileEdit() {
 
           <form onSubmit={handleSubmit} className={styles.form}>
             <div className={styles.inputGroup}>
-              <label className={styles.label} htmlFor="username">Username</label>
+              <label className={styles.label} htmlFor="gmail">Gmail</label>
               <input
-                id="username"
-                type="text"
+                id="gmail"
+                type="email"
                 className={styles.input}
-                name="username"
-                value={formData.username}
+                name="gmail"
+                value={formData.gmail}
                 onChange={handleChange}
                 disabled={loading}
                 required

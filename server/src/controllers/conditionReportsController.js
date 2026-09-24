@@ -84,7 +84,7 @@ const submitConditionReports = async (req, res) => {
         ),
         reporter:users!item_condition_reports_reported_by_fkey (
           id,
-          username
+          gmail
         )
       `);
 
@@ -100,7 +100,7 @@ const submitConditionReports = async (req, res) => {
 /**
  * GET /api/requests/:id/condition-reports
  * Manager only. Returns all condition reports for a request
- * joined with item name and reporter username.
+ * joined with item name and reporter gmail.
  */
 const getConditionReports = async (req, res) => {
   try {
@@ -129,7 +129,7 @@ const getConditionReports = async (req, res) => {
         ),
         reporter:users!item_condition_reports_reported_by_fkey (
           id,
-          username
+          gmail
         )
       `)
       .eq('request_id', id)

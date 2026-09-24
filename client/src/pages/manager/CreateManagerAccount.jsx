@@ -5,7 +5,7 @@ import styles from '../auth/Login.module.css';
 
 export default function CreateManagerAccount() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState('');
+  const [gmail, setGmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
@@ -14,27 +14,27 @@ export default function CreateManagerAccount() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!username.trim() || !password || !phone.trim()) return;
+    if (!gmail.trim() || !password || !phone.trim()) return;
     try {
       setLoading(true);
       setError(null);
       setSuccess(null);
       await register({ 
-        username: username.trim(), 
+        gmail: gmail.trim(), 
         password, 
         phone: phone.trim(), 
         role: 'manager',
         gradegroup: 'N/A'
       });
       setSuccess('Manager account created successfully!');
-      setUsername('');
+      setGmail('');
       setPassword('');
       setPhone('');
       setTimeout(() => {
         navigate('/manager');
       }, 2000);
     } catch (err) {
-      setError(err.response?.data?.error || 'Failed to create manager account. Username might already be taken.');
+      setError(err.response?.data?.error || 'Failed to create manager account. Gmail might already be taken.');
     } finally {
       setLoading(false);
     }
@@ -65,10 +65,10 @@ export default function CreateManagerAccount() {
 
           <form onSubmit={handleSubmit} className={styles.form}>
             <div className={styles.inputGroup}>
-              <label className={styles.label} htmlFor="username">Username</label>
-              <input id="username" type="text" className={styles.input} value={username}
-                onChange={(e) => setUsername(e.target.value)} placeholder="Pick a unique username"
-                required disabled={loading} autoComplete="username" />
+              <label className={styles.label} htmlFor="gmail">Gmail</label>
+              <input id="gmail" type="email" className={styles.input} value={gmail}
+                onChange={(e) => setGmail(e.target.value)} placeholder="Enter the manager Gmail"
+                required disabled={loading} autoComplete="email" />
             </div>
             <div className={styles.inputGroup}>
               <label className={styles.label} htmlFor="password">Password</label>

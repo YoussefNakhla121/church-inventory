@@ -72,7 +72,7 @@ export default function CommentThread({ requestId }) {
         ) : (
           comments.map((comment) => {
             const isMe = comment.author_id === user?.id;
-            const authorName = comment.author?.username || comment.author_username || (isMe ? 'You' : 'User');
+            const authorName = comment.author?.gmail || comment.author_gmail || (isMe ? 'You' : 'User');
             return (
               <div
                 key={comment.id}

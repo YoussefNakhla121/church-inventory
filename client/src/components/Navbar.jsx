@@ -9,7 +9,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   if (!isAuthenticated) return null;
   const isManager = user?.role === 'manager';
-  const initials = user?.username?.slice(0, 2).toUpperCase() || 'U';
+  const initials = user?.gmail?.slice(0, 2).toUpperCase() || 'U';
 
   const handleNavClick = () => {
     setMobileOpen(false);
@@ -129,7 +129,7 @@ export default function Navbar() {
         >
           <div className={styles.userPill}>
             <div className={styles.avatarCircle}>{initials}</div>
-            <span className={styles.username}>{user?.username}</span>
+            <span className={styles.gmail}>{user?.gmail}</span>
           </div>
         </button>
         <button onClick={() => { logout(); handleNavClick(); }} className={styles.logoutBtn}>Logout</button>
@@ -143,7 +143,7 @@ export default function Navbar() {
         >
           <div className={styles.userPill}>
             <div className={styles.avatarCircle}>{initials}</div>
-            <span className={styles.username}>{user?.username}</span>
+            <span className={styles.gmail}>{user?.gmail}</span>
           </div>
         </button>
         <button onClick={logout} className={styles.logoutBtn}>Logout</button>

@@ -96,8 +96,8 @@ const createRequest = async (req, res) => {
       };
 
       const [managersResult, requesterResult, itemNamesResult] = await Promise.all([
-        supabase.from('users').select('id, username, phone').eq('role', 'manager'),
-        supabase.from('users').select('id, username, phone').eq('id', req.user.id).single(),
+        supabase.from('users').select('id, gmail, phone').eq('role', 'manager'),
+        supabase.from('users').select('id, gmail, phone').eq('id', req.user.id).single(),
         supabase.from('items').select('id, name').in('id', items.map(i => i.item_id)),
       ]);
 
@@ -221,7 +221,7 @@ const cancelRequest = async (req, res) => {
 
 /**
  * GET /api/requests
- * Manager only. Returns all requests with requester username and phone.
+ * Manager only. Returns all requests with requester gmail and phone.
  * Supports optional ?status= query param to filter by status.
  */
 const getAllRequests = async (req, res) => {
@@ -249,7 +249,7 @@ const getAllRequests = async (req, res) => {
         created_at,
         requester:users!requests_requester_id_fkey (
           id,
-          username,
+          gmail,
           phone
         ),
         request_items (
@@ -344,7 +344,7 @@ const updateRequestStatus = async (req, res) => {
 
       const { data: requester, error: userError } = await supabase
         .from('users')
-        .select('id, username, phone')
+        .select('id, gmail, phone')
         .eq('id', fullRequest.requester_id)
         .single();
 

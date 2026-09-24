@@ -38,7 +38,7 @@ Inventory managers review and physically prepare approved requests.
 - Can leave comments on any request.
 
 ### Shared Fields (both roles)
-- `username` (unique)
+- `gmail` (unique)
 - `password` (hashed with bcrypt)
 - `phone number` (for direct communication between requesters and managers)
 - `role` (requester | manager)
@@ -95,7 +95,7 @@ Inventory managers review and physically prepare approved requests.
 ### `users`
 ```
 id              uuid, primary key
-username        text, unique, not null
+gmail           text, unique, not null
 password_hash   text, not null
 phone           text, not null
 role            enum('requester', 'manager'), not null
@@ -289,7 +289,7 @@ const { data, error } = await supabase.rpc('create_request', { ...payload });
 
 ### Auth
 ```
-POST   /api/auth/register          Create a new user (username, password, phone, role)
+POST   /api/auth/register          Create a new user (gmail, password, phone, role)
 POST   /api/auth/login             Returns JWT token
 ```
 

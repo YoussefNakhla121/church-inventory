@@ -156,7 +156,7 @@ All protected routes require a `Bearer` token in the `Authorization` header:
 Authorization: Bearer <your_jwt_token>
 ```
 
-JWT payload: `{ id, username, role }` — expires in **7 days**.
+JWT payload: `{ id, gmail, role }` — expires in **7 days**.
 
 ---
 

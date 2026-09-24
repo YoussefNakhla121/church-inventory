@@ -8,7 +8,7 @@ export default function Login() {
   const { login: contextLogin } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  const [username, setUsername] = useState('');
+  const [gmail, setGmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -17,11 +17,11 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!username.trim() || !password) return;
+    if (!gmail.trim() || !password) return;
     try {
       setLoading(true);
       setError(null);
-      const response = await loginApi({ username: username.trim(), password });
+      const response = await loginApi({ gmail: gmail.trim(), password });
       const { token, user } = response.data;
       contextLogin(token, user);
       if (from === '/') {
@@ -63,10 +63,10 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className={styles.form}>
             <div className={styles.inputGroup}>
-              <label className={styles.label} htmlFor="username">Username</label>
-              <input id="username" type="text" className={styles.input} value={username}
-                onChange={(e) => setUsername(e.target.value)} placeholder="Enter your username"
-                required disabled={loading} autoComplete="username" />
+              <label className={styles.label} htmlFor="gmail">Gmail</label>
+              <input id="gmail" type="email" className={styles.input} value={gmail}
+                onChange={(e) => setGmail(e.target.value)} placeholder="Enter your Gmail"
+                required disabled={loading} autoComplete="email" />
             </div>
             <div className={styles.inputGroup}>
               <label className={styles.label} htmlFor="password">Password</label>

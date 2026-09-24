@@ -3,7 +3,7 @@ const supabase = require('../config/supabase');
 /**
  * GET /api/requests/:id/comments
  * All authenticated users. Returns comments ordered oldest-first,
- * joined with author username and role.
+ * joined with author gmail and role.
  */
 const getComments = async (req, res) => {
   try {
@@ -27,7 +27,7 @@ const getComments = async (req, res) => {
         created_at,
         author:users!request_comments_author_id_fkey (
           id,
-          username,
+          gmail,
           role
         )
       `)
@@ -87,7 +87,7 @@ const postComment = async (req, res) => {
         created_at,
         author:users!request_comments_author_id_fkey (
           id,
-          username,
+          gmail,
           role
         )
       `)

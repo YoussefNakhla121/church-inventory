@@ -107,7 +107,7 @@ export default function Dashboard() {
             </thead>
             <tbody>
               {requests.map((req) => {
-                const requesterUsername = req.requester?.username || 'Unknown';
+                const requesterGmail = req.requester?.gmail || 'Unknown';
                 const requesterPhone = req.requester?.phone || 'No phone';
                 const itemsList = req.request_items || [];
 
@@ -115,7 +115,7 @@ export default function Dashboard() {
                   <tr key={req.id} className={styles.tr}>
                     <td className={styles.td}>
                       <div className={styles.requesterInfo}>
-                        <span className={styles.requesterName}>{requesterUsername}</span>
+                        <span className={styles.requesterName}>{requesterGmail}</span>
                         <span className={styles.requesterPhone}>📞 {requesterPhone}</span>
                       </div>
                     </td>

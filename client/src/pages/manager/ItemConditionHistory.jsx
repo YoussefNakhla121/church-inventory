@@ -94,7 +94,7 @@ export default function ItemConditionHistory() {
                 <div className={styles.cardHeader}>
                   <div className={styles.reporterMeta}>
                     <span className={styles.reporterName}>
-                      Logged by: {report.reporter?.username || 'System Manager'}
+                      Logged by: {report.reporter?.gmail || 'System Manager'}
                     </span>
                     <span className={styles.reportDate}>
                       {formatDateTime(report.reported_at)}

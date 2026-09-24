@@ -125,7 +125,7 @@ async function notifyManagersNewRequest(request, requester, managers, items) {
   const body = wrapHtml(`
     <p style="margin:0 0 16px;">A new reservation request has been submitted.</p>
     <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
-      <tr><td style="padding:4px 8px;font-weight:600;">Requester:</td><td style="padding:4px 8px;">${requester.username} &mdash; ${requester.phone || 'N/A'}</td></tr>
+      <tr><td style="padding:4px 8px;font-weight:600;">Requester:</td><td style="padding:4px 8px;">${requester.gmail} &mdash; ${requester.phone || 'N/A'}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">Grade Group:</td><td style="padding:4px 8px;">${request.GradeGroup || request.gradegroup || 'N/A'}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">From:</td><td style="padding:4px 8px;">${fmtDate(request.start_time)}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">To:</td><td style="padding:4px 8px;">${fmtDate(request.end_time)}</td></tr>
@@ -137,19 +137,19 @@ async function notifyManagersNewRequest(request, requester, managers, items) {
     ${conflictsHtml}
   `);
 
-  const subject = `New Reservation Request from ${requester.username}`;
+  const subject = `New Reservation Request from ${requester.gmail}`;
 
   // Send manager emails sequentially with a small delay to avoid Gmail rate limiting
   for (let i = 0; i < managers.length; i++) {
     const manager = managers[i];
     try {
-      await sendEmail(manager.username, subject, body);
+      await sendEmail(manager.gmail, subject, body);
       // Add 500ms delay between emails to prevent Gmail from blocking as spam
       if (i < managers.length - 1) {
         await new Promise(resolve => setTimeout(resolve, 500));
       }
     } catch (err) {
-      console.error(`Email to manager ${manager.username} failed:`, err.message);
+      console.error(`Email to manager ${manager.gmail} failed:`, err.message);
     }
   }
 }
@@ -183,7 +183,7 @@ async function notifyRequesterRequestCreated(request, requester, items) {
   }
 
   const body = wrapHtml(`
-    <p style="margin:0 0 16px;">Hi ${requester.username},</p>
+    <p style="margin:0 0 16px;">Hi ${requester.gmail},</p>
     <p style="margin:0 0 16px;">Your reservation request has been submitted successfully.</p>
     <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
       <tr><td style="padding:4px 8px;font-weight:600;">Status:</td><td style="padding:4px 8px;">${statusBadge(status)}</td></tr>
@@ -199,12 +199,12 @@ async function notifyRequesterRequestCreated(request, requester, items) {
 
   try {
     await sendEmail(
-      requester.username,
+      requester.gmail,
       'Your Reservation Request Has Been Received — Church Inventory',
       body
     );
   } catch (err) {
-    console.error(`Email notification for request creation to requester ${requester.username} failed:`, err.message);
+    console.error(`Email notification for request creation to requester ${requester.gmail} failed:`, err.message);
   }
 }
 
@@ -236,11 +236,11 @@ async function notifyRequesterStatusChange(request, requester, items, changedBy)
   }
 
   const body = wrapHtml(`
-    <p style="margin:0 0 16px;">Hi ${requester.username},</p>
+    <p style="margin:0 0 16px;">Hi ${requester.gmail},</p>
     <p style="margin:0 0 16px;">Your reservation request status has been updated.</p>
     <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
       <tr><td style="padding:4px 8px;font-weight:600;">New Status:</td><td style="padding:4px 8px;">${statusBadge(status)}</td></tr>
-      <tr><td style="padding:4px 8px;font-weight:600;">Updated by:</td><td style="padding:4px 8px;">${changedBy.username}</td></tr>
+      <tr><td style="padding:4px 8px;font-weight:600;">Updated by:</td><td style="padding:4px 8px;">${changedBy.gmail}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">Grade Group:</td><td style="padding:4px 8px;">${request.GradeGroup || request.gradegroup || 'N/A'}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">From:</td><td style="padding:4px 8px;">${fmtDate(request.start_time)}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">To:</td><td style="padding:4px 8px;">${fmtDate(request.end_time)}</td></tr>
@@ -252,12 +252,12 @@ async function notifyRequesterStatusChange(request, requester, items, changedBy)
 
   try {
     await sendEmail(
-      requester.username,
+      requester.gmail,
       `Your Request Has Been ${capitalStatus} — Church Inventory`,
       body
     );
   } catch (err) {
-    console.error(`Email notification for status change to requester ${requester.username} failed:`, err.message);
+    console.error(`Email notification for status change to requester ${requester.gmail} failed:`, err.message);
   }
 }
 

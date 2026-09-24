@@ -176,8 +176,8 @@ export default function RequestDetail() {
             <h3 className={styles.sectionTitle}>Requester Contacts</h3>
             <div className={styles.detailsList}>
               <div className={styles.detailRow}>
-                <span className={styles.detailLabel}>Username</span>
-                <span className={styles.detailValue}>{requester.username || 'Unknown'}</span>
+                <span className={styles.detailLabel}>Gmail</span>
+                <span className={styles.detailValue}>{requester.gmail || 'Unknown'}</span>
               </div>
               <div className={styles.detailRow}>
                 <span className={styles.detailLabel}>Phone Number</span>
