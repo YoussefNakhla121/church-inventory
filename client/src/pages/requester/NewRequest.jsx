@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { getItems, getItemAvailability } from '../../api/items';
 import { createRequest } from '../../api/requests';
+import { getGradeGroups } from '../../api/auth';
 import ImageLightbox from '../../components/ImageLightbox';
 import styles from './NewRequest.module.css';
 
@@ -23,6 +24,7 @@ export default function NewRequest() {
   const [catalogItems, setCatalogItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState({}); // { item_id: quantity }
   const [searchQuery, setSearchQuery] = useState('');
+  const [gradeGroups, setGradeGroups] = useState([]);
 
   // Lightbox state
   const [lightbox, setLightbox] = useState({ isOpen: false, src: '', alt: '' });
@@ -31,6 +33,20 @@ export default function NewRequest() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [conflicts, setConflicts] = useState(null);
+
+  useEffect(() => {
+    const fetchGradeGroups = async () => {
+      try {
+        const response = await getGradeGroups();
+        setGradeGroups(response.data || []);
+      } catch (err) {
+        console.error('Failed to load grade groups:', err);
+        setGradeGroups([]);
+      }
+    };
+
+    fetchGradeGroups();
+  }, []);
 
   // Validate dates for step 1
   const validateDates = () => {
@@ -570,13 +586,12 @@ export default function NewRequest() {
                     value={gradegroup}
                     onChange={(e) => setGradegroup(e.target.value)}
                     required
+                    disabled={gradeGroups.length === 0}
                   >
-                    <option value="">Select a grade group...</option>
-                    <option value="اول و تاني">اول و تاني</option>
-                    <option value="تلاته و رابعه">تلاته و رابعه</option>
-                    <option value="خامسه و سادسه">خامسه و سادسه</option>
-                    <option value="اعدادي">اعدادي</option>
-                    <option value="ثانوي">ثانوي</option>
+                    <option value="">{gradeGroups.length ? 'Select a grade group...' : 'Loading grade groups...'}</option>
+                    {gradeGroups.map((group) => (
+                      <option key={group} value={group}>{group}</option>
+                    ))}
                   </select>
                 ) : null}
               </div>

@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { register } from '../../api/auth';
+import { register, getGradeGroups } from '../../api/auth';
 import styles from './Login.module.css';
 
 export default function Register() {
@@ -10,8 +10,23 @@ export default function Register() {
   const [phone, setPhone] = useState('');
   const [role, setRole] = useState('requester');
   const [gradegroup, setGradegroup] = useState('');
+  const [gradeGroups, setGradeGroups] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchGradeGroups = async () => {
+      try {
+        const response = await getGradeGroups();
+        setGradeGroups(response.data || []);
+      } catch (err) {
+        console.error('Failed to load grade groups:', err);
+        setGradeGroups([]);
+      }
+    };
+
+    fetchGradeGroups();
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -72,13 +87,11 @@ export default function Register() {
             <div className={styles.inputGroup}>
               <label className={styles.label} htmlFor="gradegroup">Grade Group</label>
               <select id="gradegroup" className={styles.select} value={gradegroup}
-                onChange={(e) => setGradegroup(e.target.value)} required disabled={loading}>
-                <option value="">Select Grade Group</option>
-                <option value="اول و تاني">اول و تاني</option>
-                <option value="تلاته و رابعه">تلاته و رابعه</option>
-                <option value="خامسه و سادسه">خامسه و سادسه</option>
-                <option value="اعدادي">اعدادي</option>
-                <option value="ثانوي">ثانوي</option>
+                onChange={(e) => setGradegroup(e.target.value)} required disabled={loading || gradeGroups.length === 0}>
+                <option value="">{gradeGroups.length ? 'Select Grade Group' : 'Loading grade groups...'}</option>
+                {gradeGroups.map((group) => (
+                  <option key={group} value={group}>{group}</option>
+                ))}
               </select>
             </div>
             <button type="submit" className={styles.button} disabled={loading}>

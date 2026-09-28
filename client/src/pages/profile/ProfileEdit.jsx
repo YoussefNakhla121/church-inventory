@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { updateProfile as updateProfileApi } from '../../api/auth';
+import { updateProfile as updateProfileApi, getGradeGroups } from '../../api/auth';
 import styles from './ProfileEdit.module.css';
 
 export default function ProfileEdit() {
@@ -16,6 +16,21 @@ export default function ProfileEdit() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  const [gradeGroups, setGradeGroups] = useState([]);
+
+  useEffect(() => {
+    const fetchGradeGroups = async () => {
+      try {
+        const response = await getGradeGroups();
+        setGradeGroups(response.data || []);
+      } catch (err) {
+        console.error('Failed to load grade groups:', err);
+        setGradeGroups([]);
+      }
+    };
+
+    fetchGradeGroups();
+  }, []);
 
   useEffect(() => {
     if (user) {
@@ -112,15 +127,13 @@ export default function ProfileEdit() {
                   name="gradegroup"
                   value={formData.gradegroup}
                   onChange={handleChange}
-                  disabled={loading}
+                  disabled={loading || gradeGroups.length === 0}
                   required
                 >
-                  <option value="">Select Grade Group</option>
-                  <option value="اول و تاني">اول و تاني</option>
-                  <option value="تلاته و رابعه">تلاته و رابعه</option>
-                  <option value="خامسه و سادسه">خامسه و سادسه</option>
-                  <option value="اعدادي">اعدادي</option>
-                  <option value="ثانوي">ثانوي</option>
+                  <option value="">{gradeGroups.length ? 'Select Grade Group' : 'Loading grade groups...'}</option>
+                  {gradeGroups.map((group) => (
+                    <option key={group} value={group}>{group}</option>
+                  ))}
                 </select>
               </div>
             )}

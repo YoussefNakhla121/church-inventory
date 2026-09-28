@@ -6,6 +6,7 @@ const itemRoutes = require('./routes/items');
 const requestRoutes = require('./routes/requests');
 const commentRoutes = require('./routes/comments');
 const conditionReportRoutes = require('./routes/conditionReports');
+const gradeGroupsRoutes = require('./routes/gradeGroups');
 
 const app = express();
 
@@ -66,6 +67,7 @@ app.get('/', (req, res) => {
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);
 app.use('/api/items', itemRoutes);
+app.use('/api/gradegroups', gradeGroupsRoutes);
 app.use('/api/requests', requestRoutes);
 app.use('/api/requests', commentRoutes);
 app.use('/api/requests', conditionReportRoutes);
