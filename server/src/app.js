@@ -12,8 +12,12 @@ const app = express();
 
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
+const canonicalFrontendUrl = process.env.CLIENT_URL  || 'https://wsa2l-el-2daa7.vercel.app';
+
 const allowedOrigins = [
-  'https://church-inventory-ten.vercel.app',
+  canonicalFrontendUrl,
+  'https://wsa2l-el-2daa7.vercel.app',
+  'https://church-inventory.vercel.app',
   'http://localhost:5173',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
@@ -22,12 +26,33 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+    if (!origin) {
+      return callback(null, true);
     }
-  }
+
+    const normalizedOrigin = origin.trim();
+
+    if (allowedOrigins.includes(normalizedOrigin)) {
+      return callback(null, true);
+    }
+
+    try {
+      const hostname = new URL(normalizedOrigin).hostname;
+      const isLocalhost = ['localhost', '127.0.0.1'].includes(hostname);
+      const isVercelPreview = hostname.endsWith('.vercel.app');
+
+      if (isLocalhost || isVercelPreview) {
+        return callback(null, true);
+      }
+    } catch (error) {
+      return callback(new Error('Not allowed by CORS'));
+    }
+
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
