@@ -42,7 +42,7 @@ export default function Login() {
       <div className={styles.leftPanel}>
         <div className={styles.brandBig}>
           <div className={styles.churchIcon}>⛪</div>
-          <h1 className={styles.leftTitle}>Church<br />Inventory</h1>
+          <h1 className={styles.leftTitle}>Wsa2l El 2daa7</h1>
           <p className={styles.leftSub}>A modern reservation system for church equipment and resources.</p>
           <div className={styles.features}>
 

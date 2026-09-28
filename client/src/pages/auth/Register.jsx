@@ -34,7 +34,7 @@ export default function Register() {
         <div className={styles.brandBig}>
           <div className={styles.churchIcon}>⛪</div>
           <h1 className={styles.leftTitle}>Join the<br />Community</h1>
-          <p className={styles.leftSub}>Create your account to start reserving church inventory and resources.</p>
+          <p className={styles.leftSub}>Create your account to start reserving church's Wsa2l El 2daa7 and resources.</p>
           <div className={styles.features}>
 
           </div>

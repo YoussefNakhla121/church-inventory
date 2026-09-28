@@ -25,7 +25,7 @@ export default function Navbar() {
       <Link to="/" className={styles.brand} onClick={handleNavClick}>
         <div className={styles.brandIcon}>⛪</div>
         <div className={styles.brandText}>
-          <span className={styles.brandName}>Church Inventory</span>
+          <span className={styles.brandName}>Wsa2l El 2daa7</span>
           {/* <span className={styles.brandSub}>Reservation System</span> */}
         </div>
       </Link>

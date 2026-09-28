@@ -9,10 +9,8 @@ const conditionReportRoutes = require('./routes/conditionReports');
 
 const app = express();
 
-
-
 // ─── Middleware ───────────────────────────────────────────────────────────────
-const canonicalFrontendUrl = process.env.CLIENT_URL  || 'https://wsa2l-el-2daa7.vercel.app';
+const canonicalFrontendUrl = process.env.CLIENT_URL || 'https://wsa2l-el-2daa7.vercel.app';
 
 const allowedOrigins = [
   canonicalFrontendUrl,
@@ -24,7 +22,7 @@ const allowedOrigins = [
   'http://127.0.0.1:3000'
 ];
 
-app.use(cors({
+const corsOptions = {
   origin: (origin, callback) => {
     if (!origin) {
       return callback(null, true);
@@ -52,8 +50,12 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  optionsSuccessStatus: 204
+};
+
+app.options('*', cors(corsOptions));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

@@ -45,13 +45,13 @@ function wrapHtml(bodyContent) {
   return `
 <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;color:#1a0f0a;">
   <div style="background:#2c1810;padding:20px 24px;border-radius:8px 8px 0 0;">
-    <h2 style="color:#ffffff;margin:0;font-size:18px;">Church Inventory System</h2>
+    <h2 style="color:#ffffff;margin:0;font-size:18px;">Wsa2l El 2daa7</h2>
   </div>
   <div style="background:#ffffff;padding:24px;border:1px solid #e8ddd0;border-top:none;border-radius:0 0 8px 8px;">
     ${bodyContent}
   </div>
   <p style="color:#8b6e5c;font-size:12px;text-align:center;margin-top:16px;">
-    This is an automated message from the Church Inventory System.
+    This is an automated message from the Wsa2l El 2daa7.
   </p>
 </div>`.trim();
 }
@@ -220,7 +220,7 @@ async function notifyRequesterRequestCreated(request, requester, items) {
   try {
     await sendEmail(
       requester.gmail,
-      'Your Reservation Request Has Been Received — Church Inventory',
+      'Your Reservation Request Has Been Received — Wsa2l El 2daa7',
       body
     );
   } catch (err) {
@@ -273,7 +273,7 @@ async function notifyRequesterStatusChange(request, requester, items, changedBy)
   try {
     await sendEmail(
       requester.gmail,
-      `Your Request Has Been ${capitalStatus} — Church Inventory`,
+      `Your Request Has Been ${capitalStatus} — Wsa2l El 2daa7`,
       body
     );
   } catch (err) {

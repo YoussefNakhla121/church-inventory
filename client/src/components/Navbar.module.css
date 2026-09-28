@@ -35,15 +35,16 @@
 }
 
 .brandIcon {
-  width: 26px;
-  height: 26px;
-  min-width: 26px;
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
   background: linear-gradient(135deg, #c4622d, #d4845a);
-  border-radius: 6px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.7rem;
+  font-size: 1.6rem;
+  line-height: 1;
   flex-shrink: 0;
 }
 
@@ -405,9 +406,10 @@
   }
 
   .brandIcon {
-    width: 28px;
-    height: 28px;
-    min-width: 28px;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    font-size: 1.5rem;
   }
 
   .brandText {
@@ -483,10 +485,11 @@
   }
 
   .brandIcon {
-    width: 30px;
-    height: 30px;
-    min-width: 30px;
-    border-radius: 7px;
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 10px;
+    font-size: 1.7rem;
   }
 
   .brandText {
@@ -537,11 +540,11 @@
   }
 
   .brandIcon {
-    width: 32px;
-    height: 32px;
-    min-width: 32px;
-    border-radius: 8px;
-    font-size: 0.8rem;
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    border-radius: 12px;
+    font-size: 1.8rem;
   }
 
   .brandName {
@@ -596,11 +599,11 @@
   }
 
   .brandIcon {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    border-radius: 10px;
-    font-size: 0.85rem;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 12px;
+    font-size: 1.9rem;
   }
 
   .brandName {
