@@ -80,6 +80,54 @@ const createRequest = async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
 
+    // ── Calculate and persist total_price for approved requests ──────────────
+    if (data.success && data.request_id) {
+      try {
+        // Fetch prices for all requested items
+        const itemIds = items.map((i) => i.item_id);
+        const { data: itemPrices, error: priceError } = await supabase
+          .from('items')
+          .select('id, price')
+          .in('id', itemIds);
+
+        if (!priceError && itemPrices) {
+          const priceMap = {};
+          for (const item of itemPrices) {
+            priceMap[item.id] = item.price ?? 0;
+          }
+
+          // Determine number of days (ceiling, so a partial day = 1 day)
+          const durationMs = end - start;
+          const numDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
+          const isMultiDay = numDays > 1;
+
+          let totalPrice = 0;
+          for (const item of items) {
+            const unitPrice = priceMap[item.item_id] ?? 0;
+            const qty = item.quantity_requested;
+            if (isMultiDay) {
+              // Multi-day: price × 2 × numDays × quantity
+              totalPrice += unitPrice * 2 * numDays * qty;
+            } else {
+              // Single-day: price × quantity
+              totalPrice += unitPrice * qty;
+            }
+          }
+
+          // Round to 2 decimal places to avoid floating-point drift
+          totalPrice = Math.round(totalPrice * 100) / 100;
+
+          await supabase
+            .from('requests')
+            .update({ total_price: totalPrice })
+            .eq('id', data.request_id);
+        }
+      } catch (priceErr) {
+        // Non-fatal: log but don't block the response
+        console.error('total_price calculation error:', priceErr);
+      }
+    }
+
     // RPC returns { success, request_id } on approval or { success, conflicts } on rejection
     const statusCode = data.success ? 201 : 409;
     res.status(statusCode).json(data);

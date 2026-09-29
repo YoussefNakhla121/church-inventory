@@ -20,6 +20,10 @@ export default function NewRequest() {
   const [notes, setNotes] = useState('');
   const [gradegroup, setGradegroup] = useState('');
 
+  // Manager-only: separate end date (start date is also the reservation date)
+  // endDate === '' means same as start date (single-day)
+  const [endDate, setEndDate] = useState('');
+
   // Item catalogs and availability
   const [catalogItems, setCatalogItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState({}); // { item_id: quantity }
@@ -50,8 +54,41 @@ export default function NewRequest() {
 
   // Validate dates for step 1
   const validateDates = () => {
-    if (!startTime || !endTime) {
-      setError('Please select a reservation date, start time, and end time.');
+    if (!startTime) {
+      setError('Please select a reservation date.');
+      return false;
+    }
+
+    if (isManager && isMultiDay) {
+      // Multi-day manager reservation: just validate dates, no time check
+      const start = new Date(startTime);
+      const end = new Date(endTime);
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        setError('Invalid date format.');
+        return false;
+      }
+      if (end <= start) {
+        setError('End date must be after the start date.');
+        return false;
+      }
+      const now = new Date();
+      now.setHours(0, 0, 0, 0);
+      if (start < now) {
+        setError('Start date cannot be in the past.');
+        return false;
+      }
+      const diffDays = (start - now) / (1000 * 60 * 60 * 24);
+      if (diffDays > 90) {
+        setError('Reservations can be made at most 90 days in advance.');
+        return false;
+      }
+      setError(null);
+      return true;
+    }
+
+    // Single-day (or requester): validate start + end times
+    if (!endTime) {
+      setError('Please select a start time and end time.');
       return false;
     }
     const start = new Date(startTime);
@@ -254,6 +291,11 @@ export default function NewRequest() {
   const getDatePart = (value) => (value ? value.split('T')[0] : '');
   const getHourPart = (value) => (value ? (value.split('T')[1] || '').slice(0, 2) : '');
 
+  const isManager = user?.role === 'manager';
+  // For managers: are start and end on different days?
+  const startDatePart = getDatePart(startTime);
+  const isMultiDay = isManager && endDate && endDate !== startDatePart;
+
   const ensureDateFor = (value) => {
     if (getDatePart(value)) return getDatePart(value);
     return new Date().toISOString().slice(0, 10);
@@ -263,15 +305,33 @@ export default function NewRequest() {
     const startHour = getHourPart(startTime) || '08';
     const endHour = getHourPart(endTime) || '09';
     setStartTime(`${date}T${startHour}:00`);
-    setEndTime(`${date}T${endHour}:00`);
+    // If manager has no separate end date set, keep end on same day
+    if (!isManager || !endDate || endDate === getDatePart(startTime)) {
+      setEndTime(`${date}T${endHour}:00`);
+      setEndDate(''); // reset end date to track "same as start"
+    }
+    // else: manager has a different end date chosen — leave endTime/endDate untouched
+  };
+
+  const handleManagerEndDateChange = (date) => {
+    const currentStartDate = getDatePart(startTime);
+    setEndDate(date);
+    if (date === currentStartDate || !date) {
+      // Same as start date → single day mode, endTime on same date
+      const endHour = getHourPart(endTime) || '09';
+      setEndTime(`${currentStartDate}T${endHour}:00`);
+    } else {
+      // Different date → multi-day: set end to midnight of that day
+      setEndTime(`${date}T23:59`);
+    }
   };
 
   const handleStartHourChange = (hour) => {
     const date = ensureDateFor(startTime);
     setStartTime(`${date}T${hour}:00`);
 
-    const endDate = ensureDateFor(endTime);
-    if (endDate !== date) {
+    const curEndDate = ensureDateFor(endTime);
+    if (curEndDate !== date) {
       setEndTime(`${date}T${getHourPart(endTime) || '09'}:00`);
     }
   };
@@ -366,8 +426,9 @@ export default function NewRequest() {
             <div className={styles.stepForm}>
               <h3 className={styles.sectionTitle}>1. Choose Reservation Window</h3>
               <div className={styles.timeFields}>
+                {/* Start Date (always shown) */}
                 <div className={styles.inputGroup}>
-                  <label className={styles.label}>Reservation Date</label>
+                  <label className={styles.label}>Start Date</label>
                   <input
                     type="date"
                     className={styles.input}
@@ -377,40 +438,61 @@ export default function NewRequest() {
                   />
                 </div>
 
-                <div className={styles.inputGroup}>
-                  <label className={styles.label}>Start Time</label>
-                  <select
-                    className={styles.input}
-                    value={getHourPart(startTime) || '08'}
-                    onChange={(e) => handleStartHourChange(e.target.value)}
-                    required
-                  >
-                    {Array.from({ length: 24 }).map((_, i) => {
-                      const hh = String(i).padStart(2, '0');
-                      return (
-                        <option key={hh} value={hh}>{hh}:00</option>
-                      );
-                    })}
-                  </select>
-                </div>
-
-                <div className={styles.inputGroup}>
-                  <label className={styles.label}>End Time</label>
-                  <select
-                    className={styles.input}
-                    value={getHourPart(endTime) || '09'}
-                    onChange={(e) => handleEndHourChange(e.target.value)}
-                    required
-                  >
-                    {Array.from({ length: 24 }).map((_, i) => {
-                      const hh = String(i).padStart(2, '0');
-                      return (
-                        <option key={hh} value={hh}>{hh}:00</option>
-                      );
-                    })}
-                  </select>
-                </div>
+                {/* Manager-only: End Date */}
+                {isManager && (
+                  <div className={styles.inputGroup}>
+                    <label className={styles.label}>End Date</label>
+                    <input
+                      type="date"
+                      className={styles.input}
+                      value={endDate || getDatePart(startTime)}
+                      min={getDatePart(startTime)}
+                      onChange={(e) => handleManagerEndDateChange(e.target.value)}
+                      required
+                    />
+                  </div>
+                )}
               </div>
+
+              {/* Time selectors: shown when single-day (or requester) */}
+              {!isMultiDay && (
+                <div className={styles.timeFields} style={{ marginTop: '1rem' }}>
+                  <div className={styles.inputGroup}>
+                    <label className={styles.label}>Start Time</label>
+                    <select
+                      className={styles.input}
+                      value={getHourPart(startTime) || '08'}
+                      onChange={(e) => handleStartHourChange(e.target.value)}
+                      required
+                    >
+                      {Array.from({ length: 24 }).map((_, i) => {
+                        const hh = String(i).padStart(2, '0');
+                        return (
+                          <option key={hh} value={hh}>{hh}:00</option>
+                        );
+                      })}
+                    </select>
+                  </div>
+
+                  <div className={styles.inputGroup}>
+                    <label className={styles.label}>End Time</label>
+                    <select
+                      className={styles.input}
+                      value={getHourPart(endTime) || '09'}
+                      onChange={(e) => handleEndHourChange(e.target.value)}
+                      required
+                    >
+                      {Array.from({ length: 24 }).map((_, i) => {
+                        const hh = String(i).padStart(2, '0');
+                        return (
+                          <option key={hh} value={hh}>{hh}:00</option>
+                        );
+                      })}
+                    </select>
+                  </div>
+                </div>
+              )}
+
               <div className={styles.actions}>
                 <button
                   type="button"
