@@ -28,4 +28,22 @@ const uploadToStorage = async (buffer, filename, mimetype, bucket = 'item-photos
   return publicData.publicUrl;
 };
 
-module.exports = { uploadToStorage };
+const removeFromStorage = async (publicUrl, bucket = 'item-photos') => {
+  const bucketPath = `/storage/v1/object/public/${bucket}/`;
+  const urlPath = new URL(publicUrl).pathname;
+  const bucketPathIndex = urlPath.indexOf(bucketPath);
+
+  if (bucketPathIndex === -1) {
+    throw new Error(`Photo URL does not belong to the ${bucket} bucket`);
+  }
+
+  const filePath = decodeURIComponent(urlPath.slice(bucketPathIndex + bucketPath.length));
+  if (!filePath) return;
+
+  const { error } = await supabase.storage.from(bucket).remove([filePath]);
+  if (error) {
+    throw new Error(`Storage removal failed: ${error.message}`);
+  }
+};
+
+module.exports = { uploadToStorage, removeFromStorage };

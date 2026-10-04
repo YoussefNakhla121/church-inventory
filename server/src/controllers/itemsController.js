@@ -1,5 +1,5 @@
 const supabase = require('../config/supabase');
-const { uploadToStorage } = require('../utils/storage');
+const { uploadToStorage, removeFromStorage } = require('../utils/storage');
 const { v4: uuidv4 } = require('uuid');
 
 /**
@@ -224,7 +224,7 @@ const updateItem = async (req, res) => {
     // Verify item exists
     const { data: existing, error: lookupError } = await supabase
       .from('items')
-      .select('id')
+      .select('id, photo_url')
       .eq('id', id)
       .maybeSingle();
 
@@ -232,6 +232,7 @@ const updateItem = async (req, res) => {
     if (!existing) return res.status(404).json({ error: 'Item not found' });
 
     const updates = {};
+    let replacedPhoto = false;
 
     if (name !== undefined) updates.name = name;
     if (description !== undefined) updates.description = description;
@@ -257,6 +258,7 @@ const updateItem = async (req, res) => {
       const ext = req.file.originalname.split('.').pop();
       const filename = `${uuidv4()}.${ext}`;
       updates.photo_url = await uploadToStorage(req.file.buffer, filename, req.file.mimetype);
+      replacedPhoto = true;
     }
 
     if (Object.keys(updates).length === 0) {
@@ -271,6 +273,14 @@ const updateItem = async (req, res) => {
       .single();
 
     if (error) return res.status(500).json({ error: error.message });
+
+    if (replacedPhoto && existing.photo_url) {
+      try {
+        await removeFromStorage(existing.photo_url);
+      } catch (storageError) {
+        console.error('Failed to remove replaced item photo:', storageError);
+      }
+    }
 
     return res.status(200).json(data);
   } catch (err) {

@@ -51,10 +51,6 @@ export default function RequestDetail() {
   }, [id]);
 
   const handleUpdateStatus = async (nextStatus) => {
-    if (!window.confirm(`Are you sure you want to change the request status to "${nextStatus}"?`)) {
-      return;
-    }
-
     try {
       setActionLoading(true);
       setError(null);
