@@ -1,4 +1,4 @@
 .vercel
 .env*
 server/scripts/create-manager.js
-server/scripts/refresh-photo-cache.js
+server/scripts/items-import/images/*

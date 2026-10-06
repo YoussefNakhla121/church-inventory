@@ -56,6 +56,42 @@ npm start
 
 The server will start on `http://localhost:5000` (or your configured `PORT`).
 
+## Bulk Item Import
+
+Prepare an import directory with this structure:
+
+```text
+scripts/items-import/
+├── items.csv
+└── images/
+    ├── football.jpg
+    └── basketball.jpg
+```
+
+The CSV header must be:
+
+```csv
+name,description,total_quantity,category,price,image_file
+```
+
+Each `image_file` value is matched explicitly to a file in `images/`; row order
+does not affect photo matching. From the `server` directory, run:
+
+```bash
+node scripts/import-items.js
+```
+
+To use another import directory:
+
+```bash
+node scripts/import-items.js path/to/import-directory
+```
+
+The importer uses the same item validation, UUID filename convention, Supabase
+`item-photos` bucket, public URL generation, cache-control behavior, and item
+insert shape as the API. It applies the manager form's 300 KB and 800 px image
+compression settings and reports every failed row in its final summary.
+
 ## Vercel Deployment
 
 The `api/index.js` adapter exports the Express app as a Vercel serverless function. Deploy from this directory so `vercel.json` and the server dependencies are used:

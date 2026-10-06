@@ -1,6 +1,7 @@
 const supabase = require('../config/supabase');
 const { uploadToStorage, removeFromStorage } = require('../utils/storage');
 const { v4: uuidv4 } = require('uuid');
+const { insertItem, validateItemInput } = require('../services/itemService');
 
 /**
  * GET /api/items
@@ -241,22 +242,7 @@ const createItem = async (req, res) => {
   try {
     const { name, description, total_quantity, category, price } = req.body;
 
-    if (!name || !total_quantity) {
-      return res.status(400).json({ error: 'name and total_quantity are required' });
-    }
-
-    const qty = parseInt(total_quantity, 10);
-    if (isNaN(qty) || qty < 1) {
-      return res.status(400).json({ error: 'total_quantity must be an integer >= 1' });
-    }
-
-    const priceValue = price !== undefined && price !== null && price !== ''
-      ? parseFloat(price)
-      : 0;
-
-    if (isNaN(priceValue) || priceValue < 0) {
-      return res.status(400).json({ error: 'price must be a number equal to or greater than 0' });
-    }
+    const { qty, priceValue } = validateItemInput({ name, total_quantity, price });
 
     let photo_url = null;
 
@@ -266,25 +252,19 @@ const createItem = async (req, res) => {
       photo_url = await uploadToStorage(req.file.buffer, filename, req.file.mimetype);
     }
 
-    const { data, error } = await supabase
-      .from('items')
-      .insert({
-        name,
-        description: description || null,
-        total_quantity: qty,
-        category: category || null,
-        price: priceValue,
-        photo_url,
-        is_active: true,
-      })
-      .select()
-      .single();
-
-    if (error) return res.status(500).json({ error: error.message });
+    const data = await insertItem({
+      name,
+      description,
+      total_quantity: qty,
+      category,
+      price: priceValue,
+      photo_url,
+    });
 
     return res.status(201).json(data);
   } catch (err) {
     console.error('createItem error:', err);
+    if (err.statusCode) return res.status(err.statusCode).json({ error: err.message });
     return res.status(500).json({ error: err.message || 'Internal server error' });
   }
 };
