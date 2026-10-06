@@ -6,6 +6,9 @@ export const getItemsAll = () => api.get('/api/items', { params: { include_inact
 export const getItemAvailability = (id, start, end) =>
   api.get(`/api/items/${id}/availability`, { params: { start, end } });
 
+export const getItemsAvailability = (start, end) =>
+  api.get('/api/items/availability', { params: { start, end } });
+
 export const getItemConditionHistory = (id) =>
   api.get(`/api/items/${id}/condition-history`);
 

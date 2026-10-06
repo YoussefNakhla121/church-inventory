@@ -118,6 +118,7 @@ server/
 | Method | Route                              | Role    | Description                        |
 |--------|------------------------------------|---------|------------------------------------|
 | GET    | `/api/items`                       | Any     | List active items                  |
+| GET    | `/api/items/availability`           | Any     | Check availability for all active items in a time window |
 | GET    | `/api/items/:id/availability`      | Any     | Check availability for time window |
 | GET    | `/api/items/:id/condition-history` | Manager | Full condition report history      |
 | POST   | `/api/items`                       | Manager | Create item (multipart/form-data)  |

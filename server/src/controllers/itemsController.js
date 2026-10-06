@@ -108,6 +108,83 @@ const getItemAvailability = async (req, res) => {
 };
 
 /**
+ * GET /api/items/availability?start=...&end=...
+ * Returns available quantities for all active items in the given time window.
+ */
+const getItemsAvailability = async (req, res) => {
+  try {
+    const { start, end } = req.query;
+
+    if (!start || !end) {
+      return res.status(400).json({ error: 'Query params "start" and "end" are required' });
+    }
+
+    const startTime = new Date(start);
+    const endTime = new Date(end);
+
+    if (isNaN(startTime) || isNaN(endTime)) {
+      return res.status(400).json({ error: 'Invalid date format for "start" or "end"' });
+    }
+
+    if (endTime <= startTime) {
+      return res.status(400).json({ error: '"end" must be after "start"' });
+    }
+
+    const pageSize = 1000;
+    const startIso = startTime.toISOString();
+    const endIso = endTime.toISOString();
+
+    const [itemsResult, reservedRows] = await Promise.all([
+      supabase
+        .from('items')
+        .select('id, total_quantity')
+        .eq('is_active', true),
+      (async () => {
+        const rows = [];
+        let offset = 0;
+
+        while (true) {
+          const { data, error } = await supabase
+            .from('request_items')
+            .select('item_id, quantity_requested, requests!inner()')
+            .in('requests.status', ['approved', 'prepared'])
+            .lt('requests.start_time', endIso)
+            .gt('requests.end_time', startIso)
+            .range(offset, offset + pageSize - 1);
+
+          if (error) throw error;
+
+          rows.push(...(data || []));
+          if (!data || data.length < pageSize) break;
+          offset += pageSize;
+        }
+
+        return rows;
+      })(),
+    ]);
+
+    if (itemsResult.error) {
+      return res.status(500).json({ error: itemsResult.error.message });
+    }
+
+    const reservedByItem = (reservedRows || []).reduce((totals, row) => {
+      totals[row.item_id] = (totals[row.item_id] || 0) + row.quantity_requested;
+      return totals;
+    }, {});
+
+    const availability = (itemsResult.data || []).reduce((result, item) => {
+      result[item.id] = Math.max(0, item.total_quantity - (reservedByItem[item.id] || 0));
+      return result;
+    }, {});
+
+    return res.status(200).json({ availability });
+  } catch (err) {
+    console.error('getItemsAvailability error:', err);
+    return res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+};
+
+/**
  * GET /api/items/:id/condition-history
  * Manager only. Returns all condition reports for an item,
  * joined with request and reporter info.
@@ -364,6 +441,7 @@ const reactivateItem = async (req, res) => {
 module.exports = {
   getItems,
   getItemAvailability,
+  getItemsAvailability,
   getItemConditionHistory,
   createItem,
   updateItem,

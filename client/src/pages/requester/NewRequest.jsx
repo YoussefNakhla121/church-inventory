@@ -1,11 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { getItems, getItemAvailability } from '../../api/items';
+import { getItems, getItemsAvailability } from '../../api/items';
 import { createRequest } from '../../api/requests';
 import { getGradeGroups } from '../../api/auth';
 import ImageLightbox from '../../components/ImageLightbox';
 import styles from './NewRequest.module.css';
+
+const formatLocalDateString = (value) => {
+  if (!value) return null;
+  const [date, time] = value.split('T');
+  if (!date || !time) return null;
+  const normalizedTime = time.length === 2 ? `${time}:00` : time;
+  const localDate = new Date(`${date}T${normalizedTime}`);
+  if (isNaN(localDate.getTime())) return null;
+  return localDate.toISOString();
+};
 
 export default function NewRequest() {
   const navigate = useNavigate();
@@ -123,28 +133,18 @@ export default function NewRequest() {
       setLoading(true);
       setError(null);
       
-      // Fetch active items
-      const itemsRes = await getItems();
+      const startISO = formatLocalDateString(startTime);
+      const endISO = formatLocalDateString(endTime);
+      const [itemsRes, availabilityRes] = await Promise.all([
+        getItems(),
+        getItemsAvailability(startISO, endISO),
+      ]);
+      const availability = availabilityRes.data?.availability || {};
       const activeItems = (itemsRes.data || []).filter(item => item.is_active !== false);
-
-      // Fetch availability in parallel
-      const availabilityPromises = activeItems.map(async (item) => {
-        try {
-          const availRes = await getItemAvailability(item.id, startTime, endTime);
-          return {
-            ...item,
-            availableQuantity: availRes.data.available_in_window
-          };
-        } catch (err) {
-          console.error(`Error fetching availability for item ${item.id}:`, err);
-          return {
-            ...item,
-            availableQuantity: item.total_quantity
-          };
-        }
-      });
-
-      const itemsWithAvailability = await Promise.all(availabilityPromises);
+      const itemsWithAvailability = activeItems.map(item => ({
+        ...item,
+        availableQuantity: availability[item.id] ?? 0,
+      }));
       setCatalogItems(itemsWithAvailability);
       
       // Clean up selected items that might have been loaded previously but are now unavailable
@@ -220,16 +220,6 @@ export default function NewRequest() {
         item_id: id,
         quantity_requested: qty,
       }));
-
-      const formatLocalDateString = (value) => {
-        if (!value) return null;
-        const [date, time] = value.split('T');
-        if (!date || !time) return null;
-        const normalizedTime = time.length === 2 ? `${time}:00` : time;
-        const localDate = new Date(`${date}T${normalizedTime}`);
-        if (isNaN(localDate.getTime())) return null;
-        return localDate.toISOString();
-      };
 
       const payload = {
         start_time: formatLocalDateString(startTime),

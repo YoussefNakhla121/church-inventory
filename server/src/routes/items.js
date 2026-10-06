@@ -6,6 +6,7 @@ const requireManager = require('../middleware/requireManager');
 const {
   getItems,
   getItemAvailability,
+  getItemsAvailability,
   getItemConditionHistory,
   createItem,
   updateItem,
@@ -27,6 +28,7 @@ const upload = multer({
 
 // ── Public-ish routes (still require login) ───────────────────────────────────
 router.get('/', auth, getItems);
+router.get('/availability', auth, getItemsAvailability);
 router.get('/:id/availability', auth, getItemAvailability);
 
 // ── Manager-only routes ───────────────────────────────────────────────────────
