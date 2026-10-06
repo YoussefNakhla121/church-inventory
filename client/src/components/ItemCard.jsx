@@ -25,6 +25,8 @@ export default function ItemCard({ item, actions, children, onPhotoClick }) {
             <img
               src={photo_url}
               alt={name}
+              loading="lazy"
+              decoding="async"
               className={styles.image}
               onClick={handlePhotoClick}
               style={{ cursor: onPhotoClick ? 'zoom-in' : 'default' }}

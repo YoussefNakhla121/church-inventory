@@ -141,6 +141,8 @@ export default function RequestDetail() {
                     <img
                       src={ri.items.photo_url}
                       alt={ri.items.name}
+                      loading="lazy"
+                      decoding="async"
                       className={styles.itemImage}
                     />
                   ) : (

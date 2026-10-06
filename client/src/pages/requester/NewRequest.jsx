@@ -543,6 +543,8 @@ export default function NewRequest() {
                               <img
                                 src={item.photo_url}
                                 alt={item.name}
+                                loading="lazy"
+                                decoding="async"
                                 className={styles.itemImage}
                                 onClick={() => setLightbox({ isOpen: true, src: item.photo_url, alt: item.name })}
                                 style={{ cursor: 'zoom-in' }}

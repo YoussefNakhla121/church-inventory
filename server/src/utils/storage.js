@@ -1,5 +1,7 @@
 const supabase = require('../config/supabase');
 
+const PHOTO_CACHE_CONTROL = '31536000'; // 1 year, filenames are unique UUIDs
+
 /**
  * Uploads a file buffer to Supabase Storage.
  *
@@ -14,6 +16,7 @@ const uploadToStorage = async (buffer, filename, mimetype, bucket = 'item-photos
     .from(bucket)
     .upload(filename, buffer, {
       contentType: mimetype,
+      cacheControl: PHOTO_CACHE_CONTROL,
       upsert: true, // overwrite on re-upload (e.g. item photo update)
     });
 
@@ -46,4 +49,4 @@ const removeFromStorage = async (publicUrl, bucket = 'item-photos') => {
   }
 };
 
-module.exports = { uploadToStorage, removeFromStorage };
+module.exports = { PHOTO_CACHE_CONTROL, uploadToStorage, removeFromStorage };
