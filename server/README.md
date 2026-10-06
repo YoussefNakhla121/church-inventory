@@ -111,8 +111,9 @@ server/
 ### Auth (public)
 | Method | Route                  | Description                    |
 |--------|------------------------|--------------------------------|
-| POST   | `/api/auth/register`   | Register user, returns JWT     |
+| POST   | `/api/auth/register`   | Register user (full_name, gmail, password, phone, role, gradegroup), returns JWT |
 | POST   | `/api/auth/login`      | Login, returns JWT             |
+| PUT    | `/api/auth/profile`    | Update full_name, gmail, phone, and gradegroup |
 
 ### Items (all require `Authorization: Bearer <token>`)
 | Method | Route                              | Role    | Description                        |

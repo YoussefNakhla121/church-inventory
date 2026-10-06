@@ -135,8 +135,8 @@ const createRequest = async (req, res) => {
     // ── Fire-and-forget email notifications ──────────────────────────────────
     try {
       const [managersResult, requesterResult, itemNamesResult] = await Promise.all([
-        supabase.from('users').select('id, gmail, phone, gradegroup').eq('role', 'manager'),
-        supabase.from('users').select('id, gmail, phone, gradegroup').eq('id', req.user.id).single(),
+        supabase.from('users').select('id, full_name, gmail, phone, gradegroup').eq('role', 'manager'),
+        supabase.from('users').select('id, full_name, gmail, phone, gradegroup').eq('id', req.user.id).single(),
         supabase.from('items').select('id, name').in('id', items.map(i => i.item_id)),
       ]);
 
@@ -193,6 +193,7 @@ const getMyRequests = async (req, res) => {
         end_time,
         notes,
         status,
+        gradegroup,
         rejection_reason,
         rejection_detail,
         created_at,
@@ -292,13 +293,16 @@ const getAllRequests = async (req, res) => {
         end_time,
         notes,
         status,
+        gradegroup,
         rejection_reason,
         rejection_detail,
         created_at,
         requester:users!requests_requester_id_fkey (
           id,
+          full_name,
           gmail,
-          phone
+          phone,
+          gradegroup
         ),
         request_items (
           id,
@@ -392,7 +396,7 @@ const updateRequestStatus = async (req, res) => {
 
       const { data: requester, error: userError } = await supabase
         .from('users')
-        .select('id, gmail, phone')
+        .select('id, full_name, gmail, phone, gradegroup')
         .eq('id', fullRequest.requester_id)
         .single();
 
@@ -406,7 +410,16 @@ const updateRequestStatus = async (req, res) => {
         quantity_requested: ri.quantity_requested,
       }));
 
-      const changedBy = req.user;
+      const { data: changedBy, error: changedByError } = await supabase
+        .from('users')
+        .select('id, full_name, gmail')
+        .eq('id', req.user.id)
+        .single();
+
+      if (changedByError) {
+        console.error('Email data fetch error:', changedByError);
+        return;
+      }
 
       notifyRequesterStatusChange(fullRequest, requester, emailItems, changedBy)
         .catch(err => console.error('Email error:', err));

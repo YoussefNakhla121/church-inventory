@@ -9,7 +9,11 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   if (!isAuthenticated) return null;
   const isManager = user?.role === 'manager';
-  const initials = user?.gmail?.slice(0, 2).toUpperCase() || 'U';
+  const name = user?.full_name?.trim() || '';
+  const nameWords = name.split(/\s+/).filter(Boolean);
+  const initials = nameWords.length > 1
+    ? `${nameWords[0][0]}${nameWords[1][0]}`.toUpperCase()
+    : name.slice(0, 2).toUpperCase() || 'U';
 
   const handleNavClick = () => {
     setMobileOpen(false);
@@ -129,7 +133,7 @@ export default function Navbar() {
         >
           <div className={styles.userPill}>
             <div className={styles.avatarCircle}>{initials}</div>
-            <span className={styles.gmail}>{user?.gmail}</span>
+            <span className={styles.gmail}>{user?.full_name}</span>
           </div>
         </button>
         <button onClick={() => { logout(); handleNavClick(); }} className={styles.logoutBtn}>Logout</button>
@@ -143,7 +147,7 @@ export default function Navbar() {
         >
           <div className={styles.userPill}>
             <div className={styles.avatarCircle}>{initials}</div>
-            <span className={styles.gmail}>{user?.gmail}</span>
+            <span className={styles.gmail}>{user?.full_name}</span>
           </div>
         </button>
         <button onClick={logout} className={styles.logoutBtn}>Logout</button>

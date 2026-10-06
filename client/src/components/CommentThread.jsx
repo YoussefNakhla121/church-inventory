@@ -71,8 +71,8 @@ export default function CommentThread({ requestId }) {
           <div className={styles.noComments}>No comments yet. Start the conversation!</div>
         ) : (
           comments.map((comment) => {
-            const isMe = comment.author_id === user?.id;
-            const authorName = comment.author?.gmail || comment.author_gmail || (isMe ? 'You' : 'User');
+            const isMe = comment.author?.id === user?.id;
+            const authorName = comment.author?.full_name || (isMe ? 'You' : 'User');
             return (
               <div
                 key={comment.id}

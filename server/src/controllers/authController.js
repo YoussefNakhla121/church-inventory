@@ -7,15 +7,16 @@ const JWT_EXPIRES_IN = '7d';
 
 /**
  * POST /api/auth/register
- * Body: { gmail, password, phone, role, grade_group }
+ * Body: { full_name, gmail, password, phone, role, grade_group }
  */
 const register = async (req, res) => {
   try {
-    const { gmail, password, phone, role, gradegroup } = req.body;
+    const { full_name, gmail, password, phone, role, gradegroup } = req.body;
+    const trimmedFullName = full_name?.trim();
 
     // ── Validate required fields ──────────────────────────────────────────────
-    if (!gmail || !password || !phone || !role || !gradegroup) {
-      return res.status(400).json({ error: 'gmail, password, phone, role, and grade_group are required' });
+    if (!trimmedFullName || !gmail || !password || !phone || !role || !gradegroup) {
+      return res.status(400).json({ error: 'full_name, gmail, password, phone, role, and grade_group are required' });
     }
 
     if (!['requester', 'manager'].includes(role)) {
@@ -46,8 +47,8 @@ const register = async (req, res) => {
 
     const { data: newUser, error: insertError } = await supabase
       .from('users')
-      .insert({ gmail, password_hash, phone, role, gradegroup })
-      .select('id, gmail, role, gradegroup')
+      .insert({ full_name: trimmedFullName, gmail, password_hash, phone, role, gradegroup })
+      .select('id, full_name, gmail, role, gradegroup')
       .single();
 
     if (insertError) {
@@ -84,7 +85,7 @@ const login = async (req, res) => {
     // ── Fetch user by gmail ─────────────────────────────────────────────────────
     const { data: user, error } = await supabase
       .from('users')
-      .select('id, gmail, password_hash, role, phone, gradegroup')
+      .select('id, full_name, gmail, password_hash, role, phone, gradegroup')
       .eq('gmail', gmail)
       .maybeSingle();
 
@@ -112,7 +113,7 @@ const login = async (req, res) => {
 
     return res.status(200).json({
       token,
-      user: { id: user.id, gmail: user.gmail, role: user.role, phone: user.phone, gradegroup: user.gradegroup },
+      user: { id: user.id, full_name: user.full_name, gmail: user.gmail, role: user.role, phone: user.phone, gradegroup: user.gradegroup },
     });
   } catch (err) {
     console.error('login error:', err);
@@ -122,12 +123,13 @@ const login = async (req, res) => {
 
 /**
  * PUT /api/auth/profile
- * Body: { gmail, phone, gradegroup }
+ * Body: { full_name, gmail, phone, gradegroup }
  * Headers: Authorization: Bearer <token>
  */
 const updateProfile = async (req, res) => {
   try {
-    const { gmail, phone, gradegroup } = req.body;
+    const { full_name, gmail, phone, gradegroup } = req.body;
+    const trimmedFullName = full_name?.trim();
     const userId = req.user?.id;
 
     if (!userId) {
@@ -135,8 +137,8 @@ const updateProfile = async (req, res) => {
     }
 
     // ── Validate required fields ──────────────────────────────────────────────
-    if (!gmail || !phone || !gradegroup) {
-      return res.status(400).json({ error: 'gmail, phone, and gradegroup are required' });
+    if (!trimmedFullName || !gmail || !phone || !gradegroup) {
+      return res.status(400).json({ error: 'full_name, gmail, phone, and gradegroup are required' });
     }
 
     // ── Check if new gmail is taken by another user ─────────────────────────
@@ -166,9 +168,9 @@ const updateProfile = async (req, res) => {
     // ── Update user profile ───────────────────────────────────────────────────
     const { data: updatedUser, error: updateError } = await supabase
       .from('users')
-      .update({ gmail, phone, gradegroup })
+      .update({ full_name: trimmedFullName, gmail, phone, gradegroup })
       .eq('id', userId)
-      .select('id, gmail, role, phone, gradegroup')
+      .select('id, full_name, gmail, role, phone, gradegroup')
       .single();
 
     if (updateError) {

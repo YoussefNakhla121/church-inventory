@@ -5,6 +5,7 @@ import styles from './Login.module.css';
 
 export default function Register() {
   const navigate = useNavigate();
+  const [fullName, setFullName] = useState('');
   const [gmail, setGmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
@@ -30,11 +31,11 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!gmail.trim() || !password || !phone.trim() || !role || !gradegroup) return;
+    if (!fullName.trim() || !gmail.trim() || !password || !phone.trim() || !role || !gradegroup) return;
     try {
       setLoading(true);
       setError(null);
-      await register({ gmail: gmail.trim(), password, phone: phone.trim(), role, gradegroup: gradegroup });
+      await register({ full_name: fullName.trim(), gmail: gmail.trim(), password, phone: phone.trim(), role, gradegroup: gradegroup });
       navigate('/login', { state: { message: 'Registration successful! Please sign in.' } });
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to register. Gmail might already be taken.');
@@ -66,6 +67,12 @@ export default function Register() {
           {error && <div className={styles.error}>{error}</div>}
 
           <form onSubmit={handleSubmit} className={styles.form}>
+            <div className={styles.inputGroup}>
+              <label className={styles.label} htmlFor="fullName">Full Name</label>
+              <input id="fullName" type="text" className={styles.input} value={fullName}
+                onChange={(e) => setFullName(e.target.value)} placeholder="Enter your full name"
+                required disabled={loading} autoComplete="name" />
+            </div>
             <div className={styles.inputGroup}>
               <label className={styles.label} htmlFor="gmail">Gmail</label>
               <input id="gmail" type="email" className={styles.input} value={gmail}

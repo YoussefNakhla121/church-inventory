@@ -27,6 +27,7 @@ const getComments = async (req, res) => {
         created_at,
         author:users!request_comments_author_id_fkey (
           id,
+          full_name,
           gmail,
           role
         )
@@ -87,6 +88,7 @@ const postComment = async (req, res) => {
         created_at,
         author:users!request_comments_author_id_fkey (
           id,
+          full_name,
           gmail,
           role
         )

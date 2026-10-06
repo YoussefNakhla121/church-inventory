@@ -95,6 +95,7 @@ Inventory managers review and physically prepare approved requests.
 ### `users`
 ```
 id              uuid, primary key
+full_name       text, not null
 gmail           text, unique, not null
 password_hash   text, not null
 phone           text, not null
@@ -289,8 +290,9 @@ const { data, error } = await supabase.rpc('create_request', { ...payload });
 
 ### Auth
 ```
-POST   /api/auth/register          Create a new user (gmail, password, phone, role)
+POST   /api/auth/register          Create a new user (full_name, gmail, password, phone, role)
 POST   /api/auth/login             Returns JWT token
+PUT    /api/auth/profile           Update full_name, gmail, phone, and gradegroup
 ```
 
 ### Items

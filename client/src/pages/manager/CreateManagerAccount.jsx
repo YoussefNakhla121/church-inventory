@@ -5,6 +5,7 @@ import styles from '../auth/Login.module.css';
 
 export default function CreateManagerAccount() {
   const navigate = useNavigate();
+  const [fullName, setFullName] = useState('');
   const [gmail, setGmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
@@ -14,12 +15,13 @@ export default function CreateManagerAccount() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!gmail.trim() || !password || !phone.trim()) return;
+    if (!fullName.trim() || !gmail.trim() || !password || !phone.trim()) return;
     try {
       setLoading(true);
       setError(null);
       setSuccess(null);
       await register({ 
+        full_name: fullName.trim(),
         gmail: gmail.trim(), 
         password, 
         phone: phone.trim(), 
@@ -28,6 +30,7 @@ export default function CreateManagerAccount() {
       });
       setSuccess('Manager account created successfully!');
       setGmail('');
+      setFullName('');
       setPassword('');
       setPhone('');
       setTimeout(() => {
@@ -64,6 +67,12 @@ export default function CreateManagerAccount() {
           {success && <div style={{ padding: '12px', marginBottom: '16px', backgroundColor: '#dcfce7', color: '#166534', borderRadius: '6px', fontSize: '14px' }}>{success}</div>}
 
           <form onSubmit={handleSubmit} className={styles.form}>
+            <div className={styles.inputGroup}>
+              <label className={styles.label} htmlFor="fullName">Full Name</label>
+              <input id="fullName" type="text" className={styles.input} value={fullName}
+                onChange={(e) => setFullName(e.target.value)} placeholder="Enter the manager full name"
+                required disabled={loading} autoComplete="name" />
+            </div>
             <div className={styles.inputGroup}>
               <label className={styles.label} htmlFor="gmail">Gmail</label>
               <input id="gmail" type="email" className={styles.input} value={gmail}

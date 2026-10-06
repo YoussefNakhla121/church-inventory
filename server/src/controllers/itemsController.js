@@ -216,6 +216,7 @@ const getItemConditionHistory = async (req, res) => {
         ),
         reporter:users!item_condition_reports_reported_by_fkey (
           id,
+          full_name,
           gmail
         )
       `)

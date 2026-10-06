@@ -145,7 +145,7 @@ async function notifyManagersNewRequest(request, requester, managers, items) {
   const body = wrapHtml(`
     <p style="margin:0 0 16px;">A new reservation request has been submitted.</p>
     <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
-      <tr><td style="padding:4px 8px;font-weight:600;">Requester:</td><td style="padding:4px 8px;">${requester.gmail} &mdash; ${requester.phone || 'N/A'}</td></tr>
+      <tr><td style="padding:4px 8px;font-weight:600;">Requester:</td><td style="padding:4px 8px;">${requester.full_name} &mdash; ${requester.phone || 'N/A'}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">Grade Group:</td><td style="padding:4px 8px;">${getGradegroupValue(request, requester)}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">From:</td><td style="padding:4px 8px;">${fmtDate(request.start_time)}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">To:</td><td style="padding:4px 8px;">${fmtDate(request.end_time)}</td></tr>
@@ -157,7 +157,7 @@ async function notifyManagersNewRequest(request, requester, managers, items) {
     ${conflictsHtml}
   `);
 
-  const subject = `New Reservation Request from ${requester.gmail}`;
+  const subject = `New Reservation Request from ${requester.full_name}`;
 
   // Send manager emails sequentially with a small delay to avoid Gmail rate limiting
   for (let i = 0; i < managers.length; i++) {
@@ -203,7 +203,7 @@ async function notifyRequesterRequestCreated(request, requester, items) {
   }
 
   const body = wrapHtml(`
-    <p style="margin:0 0 16px;">Hi ${requester.gmail},</p>
+    <p style="margin:0 0 16px;">Hi ${requester.full_name},</p>
     <p style="margin:0 0 16px;">Your reservation request has been submitted successfully.</p>
     <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
       <tr><td style="padding:4px 8px;font-weight:600;">Status:</td><td style="padding:4px 8px;">${statusBadge(status)}</td></tr>
@@ -256,11 +256,11 @@ async function notifyRequesterStatusChange(request, requester, items, changedBy)
   }
 
   const body = wrapHtml(`
-    <p style="margin:0 0 16px;">Hi ${requester.gmail},</p>
+    <p style="margin:0 0 16px;">Hi ${requester.full_name},</p>
     <p style="margin:0 0 16px;">Your reservation request status has been updated.</p>
     <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
       <tr><td style="padding:4px 8px;font-weight:600;">New Status:</td><td style="padding:4px 8px;">${statusBadge(status)}</td></tr>
-      <tr><td style="padding:4px 8px;font-weight:600;">Updated by:</td><td style="padding:4px 8px;">${changedBy.gmail}</td></tr>
+      <tr><td style="padding:4px 8px;font-weight:600;">Updated by:</td><td style="padding:4px 8px;">${changedBy.full_name}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">Grade Group:</td><td style="padding:4px 8px;">${getGradegroupValue(request, requester)}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">From:</td><td style="padding:4px 8px;">${fmtDate(request.start_time)}</td></tr>
       <tr><td style="padding:4px 8px;font-weight:600;">To:</td><td style="padding:4px 8px;">${fmtDate(request.end_time)}</td></tr>
