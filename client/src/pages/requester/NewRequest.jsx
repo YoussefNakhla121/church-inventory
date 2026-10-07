@@ -496,7 +496,7 @@ export default function NewRequest() {
           )}
 
           {step === 2 && (
-            <div className={styles.stepForm}>
+            <div className={`${styles.stepForm} ${styles.itemSelectionForm}`}>
               <div className={styles.stepHeaderRow}>
                 <h3 className={styles.sectionTitle}>2. Choose Available Equipment</h3>
                 <span className={styles.windowBadge}>
@@ -596,7 +596,7 @@ export default function NewRequest() {
                 })()}
               </div>
 
-              <div className={styles.actions}>
+              <div className={`${styles.actions} ${styles.stickyActions}`}>
                 <button
                   type="button"
                   onClick={() => setStep(1)}

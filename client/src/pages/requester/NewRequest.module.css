@@ -402,6 +402,24 @@
   padding-top: 1.5rem;
 }
 
+.itemSelectionForm {
+  padding-bottom: 5rem;
+}
+
+.stickyActions {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 10;
+  justify-content: center;
+  margin-top: 0;
+  padding: 1rem 1.5rem;
+  background: #f5f0e8;
+  border-top: 1px solid var(--border);
+  box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+}
+
 .submitBtn {
   background-color: var(--primary);
   color: white;
