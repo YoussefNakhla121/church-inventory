@@ -5,31 +5,64 @@ import RequestStatusBadge from '../../components/RequestStatusBadge';
 import styles from './Dashboard.module.css';
 
 export default function Dashboard() {
+  const PAGE_SIZE = 20;
   const [requests, setRequests] = useState([]);
   const [statusFilter, setStatusFilter] = useState(''); // empty string means "All"
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const [date, setDate] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const fetchRequests = async (status) => {
-    try {
-      setLoading(true);
-      const response = await getAllRequests(status);
-      setRequests(response.data || []);
-      setError(null);
-    } catch (err) {
-      console.error('Failed to load manager requests:', err);
-      setError('Unable to fetch requests. Please verify your connection.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   useEffect(() => {
-    fetchRequests(statusFilter);
-  }, [statusFilter]);
+    let cancelled = false;
+
+    const fetchRequests = async () => {
+      try {
+        setLoading(true);
+        const response = await getAllRequests({
+          status: statusFilter || undefined,
+          page,
+          pageSize: PAGE_SIZE,
+          date: date || undefined,
+        });
+        if (cancelled) return;
+        const data = response.data.data || [];
+        const responseTotal = response.data.total || 0;
+        setRequests(data);
+        setTotal(responseTotal);
+        if (page > Math.max(Math.ceil(responseTotal / PAGE_SIZE), 1)) {
+          setPage(1);
+        }
+        setError(null);
+      } catch (err) {
+        if (cancelled) return;
+        console.error('Failed to load manager requests:', err);
+        setError('Unable to fetch requests. Please verify your connection.');
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetchRequests();
+    return () => {
+      cancelled = true;
+    };
+  }, [statusFilter, page, date]);
 
   const handleFilterChange = (status) => {
     setStatusFilter(status);
+    setPage(1);
+  };
+
+  const handleDateChange = (event) => {
+    setDate(event.target.value);
+    setPage(1);
+  };
+
+  const clearDate = () => {
+    setDate('');
+    setPage(1);
   };
 
   const formatDateTime = (isoString) => {
@@ -81,12 +114,19 @@ export default function Dashboard() {
             </button>
           ))}
         </div>
+        <label className={styles.dateInput}>
+          Date
+          <input type="date" value={date} onChange={handleDateChange} />
+        </label>
+        {date && (
+          <button type="button" className={styles.filterBtn} onClick={clearDate}>
+            Clear date
+          </button>
+        )}
       </div>
 
       {/* Requests Table */}
-      {loading ? (
-        <div className={styles.loading}>Updating list...</div>
-      ) : requests.length === 0 ? (
+      {requests.length === 0 ? (
         <div className={styles.tableContainer}>
           <div className={styles.noRequests}>
             <h3>No reservation requests found.</h3>
@@ -94,7 +134,7 @@ export default function Dashboard() {
           </div>
         </div>
       ) : (
-        <div className={styles.tableContainer}>
+        <div className={styles.tableContainer} style={{ opacity: loading ? 0.6 : 1 }}>
           <table className={styles.table}>
             <thead>
               <tr>
@@ -158,6 +198,25 @@ export default function Dashboard() {
           </table>
         </div>
       )}
+      <div className={styles.pagination}>
+        <button
+          type="button"
+          className={styles.pageBtn}
+          onClick={() => setPage((current) => current - 1)}
+          disabled={loading || page === 1}
+        >
+          &larr; Prev
+        </button>
+        <span className={styles.pageInfo}>Page {page} of {Math.max(Math.ceil(total / PAGE_SIZE), 1)}</span>
+        <button
+          type="button"
+          className={styles.pageBtn}
+          onClick={() => setPage((current) => current + 1)}
+          disabled={loading || page >= Math.max(Math.ceil(total / PAGE_SIZE), 1)}
+        >
+          Next &rarr;
+        </button>
+      </div>
     </div>
   );
 }

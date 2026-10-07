@@ -11,6 +11,13 @@ const VALID_STATUSES = ['approved', 'prepared', 'completed', 'cancelled', 'rejec
 // Max days ahead a requester can book
 const MAX_ADVANCE_DAYS = 90;
 
+const parsePaging = (query) => {
+  const page = Math.max(parseInt(query.page, 10) || 1, 1);
+  const pageSize = Math.min(Math.max(parseInt(query.pageSize, 10) || 20, 1), 50);
+  const from = (page - 1) * pageSize;
+  return { page, pageSize, from, to: from + pageSize - 1 };
+};
+
 /**
  * POST /api/requests
  * Any authenticated user. Calls the Postgres RPC 'create_request'.
@@ -185,7 +192,8 @@ const createRequest = async (req, res) => {
  */
 const getMyRequests = async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { page, pageSize, from, to } = parsePaging(req.query);
+    const { data, count, error } = await supabase
       .from('requests')
       .select(`
         id,
@@ -206,13 +214,15 @@ const getMyRequests = async (req, res) => {
             photo_url
           )
         )
-      `)
+      `, { count: 'exact' })
       .eq('requester_id', req.user.id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(from, to);
 
     if (error) return res.status(500).json({ error: error.message });
 
-    return res.status(200).json(data);
+    return res.status(200).json({ data, total: count || 0, page, pageSize });
   } catch (err) {
     console.error('getMyRequests error:', err);
     return res.status(500).json({ error: 'Internal server error' });
@@ -276,6 +286,7 @@ const cancelRequest = async (req, res) => {
 const getAllRequests = async (req, res) => {
   try {
     const { status } = req.query;
+    const { page, pageSize, from, to } = parsePaging(req.query);
 
     const VALID_STATUSES = ['approved', 'rejected', 'prepared', 'completed', 'cancelled'];
 
@@ -283,6 +294,14 @@ const getAllRequests = async (req, res) => {
       return res.status(400).json({
         error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`,
       });
+    }
+
+    const requestedDate = req.query.date
+      ? new Date(`${req.query.date}T00:00:00.000Z`)
+      : null;
+
+    if (requestedDate && isNaN(requestedDate)) {
+      return res.status(400).json({ error: 'Invalid date filter' });
     }
 
     let query = supabase
@@ -313,18 +332,27 @@ const getAllRequests = async (req, res) => {
             photo_url
           )
         )
-      `)
-      .order('created_at', { ascending: false });
+      `, { count: 'exact' })
+      .order('created_at', { ascending: false })
+      .order('id', { ascending: false })
+      .range(from, to);
 
     if (status) {
       query = query.eq('status', status);
     }
+    if (requestedDate) {
+      const nextDate = new Date(requestedDate);
+      nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+      query = query
+        .lt('start_time', nextDate.toISOString())
+        .gte('end_time', requestedDate.toISOString());
+    }
 
-    const { data, error } = await query;
+    const { data, count, error } = await query;
 
     if (error) return res.status(500).json({ error: error.message });
 
-    return res.status(200).json(data);
+    return res.status(200).json({ data, total: count || 0, page, pageSize });
   } catch (err) {
     console.error('getAllRequests error:', err);
     return res.status(500).json({ error: 'Internal server error' });
@@ -348,8 +376,10 @@ const getRequestById = async (req, res) => {
         ? `,
         requester:users!requests_requester_id_fkey (
           id,
+          full_name,
           gmail,
-          phone
+          phone,
+          gradegroup
         )`
         : '';
 
@@ -362,6 +392,7 @@ const getRequestById = async (req, res) => {
         end_time,
         notes,
         status,
+        gradegroup,
         rejection_reason,
         rejection_detail,
         created_at,

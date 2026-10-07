@@ -5,9 +5,13 @@ import RequestStatusBadge from '../../components/RequestStatusBadge';
 import styles from './MyRequests.module.css';
 
 export default function MyRequests() {
+  const PAGE_SIZE = 20;
   const location = useLocation();
   const [requests, setRequests] = useState([]);
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [cancelLoading, setCancelLoading] = useState(null); // stores request ID being cancelled
 
@@ -17,8 +21,10 @@ export default function MyRequests() {
   const fetchRequests = async () => {
     try {
       setLoading(true);
-      const response = await getMyRequests();
-      setRequests(response.data || []);
+      const response = await getMyRequests({ page: 1, pageSize: PAGE_SIZE });
+      setRequests(response.data.data || []);
+      setTotal(response.data.total || 0);
+      setPage(1);
       setError(null);
     } catch (err) {
       console.error('Failed to load my requests:', err);
@@ -35,6 +41,26 @@ export default function MyRequests() {
       window.history.replaceState({}, document.title);
     }
   }, []);
+
+  const loadMore = async () => {
+    try {
+      setLoadingMore(true);
+      const nextPage = page + 1;
+      const response = await getMyRequests({ page: nextPage, pageSize: PAGE_SIZE });
+      const nextRequests = response.data.data || [];
+      setRequests((prev) => {
+        const existingIds = new Set(prev.map((request) => request.id));
+        return [...prev, ...nextRequests.filter((request) => !existingIds.has(request.id))];
+      });
+      setTotal(response.data.total || total);
+      setPage(nextPage);
+    } catch (err) {
+      console.error('Failed to load more requests:', err);
+      setError('Unable to fetch more reservation requests. Please try again.');
+    } finally {
+      setLoadingMore(false);
+    }
+  };
 
   const handleCancel = async (id) => {
     if (!window.confirm('Are you sure you want to cancel this reservation request? This will release the reserved quantities.')) {
@@ -159,6 +185,16 @@ export default function MyRequests() {
             );
           })}
         </div>
+      )}
+      {requests.length > 0 && requests.length < total && (
+        <button
+          type="button"
+          className={styles.loadMoreBtn}
+          onClick={loadMore}
+          disabled={loadingMore}
+        >
+          {loadingMore ? 'Loading...' : 'Load more'}
+        </button>
       )}
     </div>
   );
