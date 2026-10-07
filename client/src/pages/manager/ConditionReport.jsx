@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { getAllRequests } from '../../api/requests';
+import { getRequestById } from '../../api/requests';
 import { submitConditionReports } from '../../api/conditionReports';
 import styles from './ConditionReport.module.css';
 
@@ -19,12 +19,10 @@ export default function ConditionReport() {
     const fetchRequest = async () => {
       try {
         setLoading(true);
-        const response = await getAllRequests();
-        const found = (response.data || []).find((r) => r.id === id);
+        const response = await getRequestById(id);
+        const found = response.data;
 
-        if (!found) {
-          setError('Reservation request not found.');
-        } else if (found.status?.toLowerCase() !== 'completed') {
+        if (found.status?.toLowerCase() !== 'completed') {
           setError('Condition reports can only be submitted for Completed requests.');
         } else {
           setRequest(found);
@@ -39,11 +37,15 @@ export default function ConditionReport() {
             }
           });
           setFormData(initialForm);
+          setError(null);
         }
-        setError(null);
       } catch (err) {
         console.error('Failed to load request:', err);
-        setError('Could not load request details. Please try again.');
+        setError(
+          err.response?.status === 404
+            ? 'Reservation request not found.'
+            : 'Could not load request details. Please try again.'
+        );
       } finally {
         setLoading(false);
       }

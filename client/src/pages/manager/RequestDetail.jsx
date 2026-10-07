@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getAllRequests, updateRequestStatus } from '../../api/requests';
+import { getRequestById, updateRequestStatus } from '../../api/requests';
 import { getConditionReports } from '../../api/conditionReports';
 import RequestStatusBadge from '../../components/RequestStatusBadge';
 import CommentThread from '../../components/CommentThread';
@@ -18,27 +18,26 @@ export default function RequestDetail() {
   const fetchRequestDetail = async () => {
     try {
       setLoading(true);
-      const response = await getAllRequests();
-      const found = (response.data || []).find((r) => r.id === id);
-
-      if (!found) {
-        setError('Reservation request not found.');
-      } else {
-        setRequest(found);
-        // If request is completed, check if condition reports exist
-        if (found.status?.toLowerCase() === 'completed') {
-          try {
-            const reportsRes = await getConditionReports(id);
-            setReports(reportsRes.data || []);
-          } catch (err) {
-            console.error('Failed to load condition reports:', err);
-          }
+      const response = await getRequestById(id);
+      const found = response.data;
+      setRequest(found);
+      setError(null);
+      // If request is completed, check if condition reports exist
+      if (found.status?.toLowerCase() === 'completed') {
+        try {
+          const reportsRes = await getConditionReports(id);
+          setReports(reportsRes.data || []);
+        } catch (err) {
+          console.error('Failed to load condition reports:', err);
         }
       }
-      setError(null);
     } catch (err) {
       console.error('Failed to load request details:', err);
-      setError('Could not fetch reservation details. Please try again.');
+      setError(
+        err.response?.status === 404
+          ? 'Reservation request not found.'
+          : 'Could not fetch reservation details. Please try again.'
+      );
     } finally {
       setLoading(false);
     }

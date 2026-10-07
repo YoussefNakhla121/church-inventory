@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { getMyRequests, cancelRequest } from '../../api/requests';
+import { getRequestById, cancelRequest } from '../../api/requests';
 import RequestStatusBadge from '../../components/RequestStatusBadge';
 import CommentThread from '../../components/CommentThread';
 import styles from './RequestDetail.module.css';
@@ -16,17 +16,17 @@ export default function RequestDetail() {
   const fetchRequestDetail = async () => {
     try {
       setLoading(true);
-      const response = await getMyRequests();
-      const found = (response.data || []).find((r) => r.id === id);
-      if (!found) {
-        setError('Reservation request not found.');
-      } else {
-        setRequest(found);
-      }
+      const response = await getRequestById(id);
+      const found = response.data;
+      setRequest(found);
       setError(null);
     } catch (err) {
       console.error('Failed to load request details:', err);
-      setError('Could not fetch reservation details. Please try again.');
+      setError(
+        err.response?.status === 404
+          ? 'Reservation request not found.'
+          : 'Could not fetch reservation details. Please try again.'
+      );
     } finally {
       setLoading(false);
     }

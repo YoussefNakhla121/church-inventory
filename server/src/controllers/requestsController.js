@@ -332,6 +332,66 @@ const getAllRequests = async (req, res) => {
 };
 
 /**
+ * GET /api/requests/:id
+ * Managers can fetch any request; requesters can fetch only their own request.
+ */
+const getRequestById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)) {
+      return res.status(400).json({ error: 'Invalid request ID' });
+    }
+
+    const requesterSelect =
+      req.user.role === 'manager'
+        ? `,
+        requester:users!requests_requester_id_fkey (
+          id,
+          gmail,
+          phone
+        )`
+        : '';
+
+    const { data, error } = await supabase
+      .from('requests')
+      .select(`
+        id,
+        requester_id,
+        start_time,
+        end_time,
+        notes,
+        status,
+        rejection_reason,
+        rejection_detail,
+        created_at,
+        request_items (
+          id,
+          quantity_requested,
+          items (
+            id,
+            name,
+            photo_url
+          )
+        )${requesterSelect}
+      `)
+      .eq('id', id)
+      .maybeSingle();
+
+    if (error) return res.status(500).json({ error: error.message });
+    if (!data || (req.user.role !== 'manager' && data.requester_id !== req.user.id)) {
+      return res.status(404).json({ error: 'Request not found' });
+    }
+
+    const { requester_id, ...request } = data;
+    return res.status(200).json(request);
+  } catch (err) {
+    console.error('getRequestById error:', err);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+};
+
+/**
  * PATCH /api/requests/:id/status
  * Manager only. Sets status to any valid value.
  */
@@ -437,5 +497,6 @@ module.exports = {
   getMyRequests,
   cancelRequest,
   getAllRequests,
+  getRequestById,
   updateRequestStatus,
 };
