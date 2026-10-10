@@ -1,5 +1,5 @@
 const supabase = require('../config/supabase');
-
+const { invalidateItems, invalidateAvailability } = require('../utils/cacheKeys');
 const validateItemInput = ({ name, total_quantity, price }) => {
   if (!name || !total_quantity) {
     const error = new Error('name and total_quantity are required');
@@ -46,6 +46,8 @@ const insertItem = async ({ name, description, total_quantity, category, price, 
   if (error) {
     throw new Error(error.message);
   }
+
+  await Promise.all([invalidateItems(), invalidateAvailability()]);
 
   return data;
 };

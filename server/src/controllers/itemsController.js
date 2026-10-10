@@ -2,6 +2,8 @@ const supabase = require('../config/supabase');
 const { uploadToStorage, removeFromStorage } = require('../utils/storage');
 const { v4: uuidv4 } = require('uuid');
 const { insertItem, validateItemInput } = require('../services/itemService');
+const { cacheGet, cacheSet } = require('../config/redis');
+const { KEYS, TTL, invalidateItems, invalidateAvailability } = require('../utils/cacheKeys');
 
 /**
  * GET /api/items
@@ -11,23 +13,45 @@ const getItems = async (req, res) => {
   try {
     const includeInactive = req.query.include_inactive === 'true' && req.user?.role === 'manager';
 
-    let query = supabase
-      .from('items')
-      .select('*')
-      .order('created_at', { ascending: false });
+    let rows = null;
+    let cacheStatus = 'BYPASS';
 
+    // Only the plain "active items" list is cached. The manager "include inactive" view always hits the DB.
     if (!includeInactive) {
-      query = query.eq('is_active', true);
+      const cached = await cacheGet(KEYS.ITEMS_ACTIVE);
+      if (cached !== null) {
+        rows = cached;
+        cacheStatus = 'HIT';
+      }
     }
 
-    const { data, error } = await query;
+    if (rows === null) {
+      let query = supabase
+        .from('items')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (error) return res.status(500).json({ error: error.message });
+      if (!includeInactive) {
+        query = query.eq('is_active', true);
+      }
 
+      const { data, error } = await query;
+      if (error) return res.status(500).json({ error: error.message });
+
+      rows = data || [];
+
+      if (!includeInactive) {
+        await cacheSet(KEYS.ITEMS_ACTIVE, rows, TTL.ITEMS_ACTIVE);
+        cacheStatus = 'MISS';
+      }
+    }
+
+    // IMPORTANT: Redis holds the full rows (with price). Strip price per role AFTER reading.
     const items = req.user?.role === 'requester'
-      ? (data || []).map(({ price, ...item }) => item)
-      : data;
+      ? rows.map(({ price, ...item }) => item)
+      : rows;
 
+    res.set('X-Cache', cacheStatus);
     return res.status(200).json(items);
   } catch (err) {
     console.error('getItems error:', err);
@@ -332,6 +356,8 @@ const updateItem = async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
 
+    await Promise.all([invalidateItems(), invalidateAvailability()]);
+
     if (replacedPhoto && existing.photo_url) {
       try {
         await removeFromStorage(existing.photo_url);
@@ -376,6 +402,8 @@ const deactivateItem = async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
 
+    await Promise.all([invalidateItems(), invalidateAvailability()]);
+
     return res.status(200).json(data);
   } catch (err) {
     console.error('deactivateItem error:', err);
@@ -411,6 +439,8 @@ const reactivateItem = async (req, res) => {
       .single();
 
     if (error) return res.status(500).json({ error: error.message });
+
+    await Promise.all([invalidateItems(), invalidateAvailability()]);
 
     return res.status(200).json(data);
   } catch (err) {

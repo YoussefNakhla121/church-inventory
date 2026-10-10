@@ -8,7 +8,7 @@ const KEYS = {
 
 const TTL = {
   GRADEGROUPS: 6 * 60 * 60, // 6 hours
-  ITEMS_ACTIVE: 10 * 60,    // 10 minutes
+  ITEMS_ACTIVE: 30 * 60,    // 30 minutes
   AVAILABILITY: 45,         // 45 seconds
 };
 
