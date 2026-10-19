@@ -1,4 +1,5 @@
 const transporter = require('../config/mailer');
+const supabase = require('../config/supabase');
 
 const MAIL_FROM_NAME = process.env.MAIL_FROM_NAME || 'Church Inventory System';
 
@@ -281,8 +282,89 @@ async function notifyRequesterStatusChange(request, requester, items, changedBy)
   }
 }
 
+async function sendNewRequestEmails(requestId, requestData, requesterId, requestedItems) {
+  const startedAt = Date.now();
+  console.log(`[email:new-request] started request ${requestId}`);
+
+  try {
+    const [managersResult, requesterResult, itemNamesResult] = await Promise.all([
+      supabase.from('users').select('id, full_name, gmail, phone, gradegroup').eq('role', 'manager'),
+      supabase.from('users').select('id, full_name, gmail, phone, gradegroup').eq('id', requesterId).single(),
+      supabase.from('items').select('id, name').in('id', requestedItems.map((item) => item.item_id)),
+    ]);
+
+    if (managersResult.error || requesterResult.error || itemNamesResult.error) {
+      throw managersResult.error || requesterResult.error || itemNamesResult.error;
+    }
+
+    const requester = requesterResult.data;
+    const itemNameMap = Object.fromEntries(
+      (itemNamesResult.data || []).map((item) => [item.id, item.name])
+    );
+    const emailItems = requestedItems.map((item) => ({
+      name: itemNameMap[item.item_id] || 'Unknown Item',
+      quantity_requested: item.quantity_requested,
+    }));
+
+    await Promise.all([
+      notifyManagersNewRequest(requestData, requester, managersResult.data || [], emailItems),
+      notifyRequesterRequestCreated(requestData, requester, emailItems),
+    ]);
+  } catch (err) {
+    console.error(`[email:new-request] request ${requestId} failed:`, err);
+  } finally {
+    console.log(`[email:new-request] finished request ${requestId} in ${Date.now() - startedAt}ms`);
+  }
+}
+
+async function sendStatusChangeEmails(requestId, request, changedById) {
+  const startedAt = Date.now();
+  console.log(`[email:status-change] started request ${requestId}`);
+
+  try {
+    const [itemsResult, requesterResult, changedByResult] = await Promise.all([
+      supabase
+        .from('request_items')
+        .select('quantity_requested, items ( id, name )')
+        .eq('request_id', requestId),
+      supabase
+        .from('users')
+        .select('id, full_name, gmail, phone, gradegroup')
+        .eq('id', request.requester_id)
+        .single(),
+      supabase
+        .from('users')
+        .select('id, full_name, gmail')
+        .eq('id', changedById)
+        .single(),
+    ]);
+
+    if (itemsResult.error || requesterResult.error || changedByResult.error) {
+      throw itemsResult.error || requesterResult.error || changedByResult.error;
+    }
+
+    const emailItems = (itemsResult.data || []).map((item) => ({
+      name: item.items?.name || 'Unknown Item',
+      quantity_requested: item.quantity_requested,
+    }));
+
+    await notifyRequesterStatusChange(
+      request,
+      requesterResult.data,
+      emailItems,
+      changedByResult.data
+    );
+  } catch (err) {
+    console.error(`[email:status-change] request ${requestId} failed:`, err);
+  } finally {
+    console.log(`[email:status-change] finished request ${requestId} in ${Date.now() - startedAt}ms`);
+  }
+}
+
 module.exports = {
   notifyManagersNewRequest,
   notifyRequesterRequestCreated,
   notifyRequesterStatusChange,
+  sendNewRequestEmails,
+  sendStatusChangeEmails,
 };

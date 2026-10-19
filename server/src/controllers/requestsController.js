@@ -1,9 +1,10 @@
 const supabase = require('../config/supabase');
 const {
-  notifyManagersNewRequest,
-  notifyRequesterRequestCreated,
-  notifyRequesterStatusChange,
+  sendNewRequestEmails,
+  sendStatusChangeEmails,
 } = require('../utils/emails');
+const { runInBackground } = require('../utils/background');
+const { invalidateAvailability } = require('../utils/cacheKeys');
 
 // All valid statuses a manager can assign
 const VALID_STATUSES = ['approved', 'prepared', 'completed', 'cancelled', 'rejected'];
@@ -135,50 +136,25 @@ const createRequest = async (req, res) => {
       }
     }
 
+    if (data.success) {
+      await invalidateAvailability();
+    }
+
     // RPC returns { success, request_id } on approval or { success, conflicts } on rejection
     const statusCode = data.success ? 201 : 409;
     res.status(statusCode).json(data);
 
-    // ── Fire-and-forget email notifications ──────────────────────────────────
-    try {
-      const [managersResult, requesterResult, itemNamesResult] = await Promise.all([
-        supabase.from('users').select('id, full_name, gmail, phone, gradegroup').eq('role', 'manager'),
-        supabase.from('users').select('id, full_name, gmail, phone, gradegroup').eq('id', req.user.id).single(),
-        supabase.from('items').select('id, name').in('id', items.map(i => i.item_id)),
-      ]);
-
-      if (managersResult.error || requesterResult.error || itemNamesResult.error) {
-        console.error('Email data fetch error:', managersResult.error || requesterResult.error || itemNamesResult.error);
-        return;
-      }
-
-      const managers = managersResult.data || [];
-      const requester = requesterResult.data;
-      const requestData = {
-        ...data,
-        start_time,
-        end_time,
-        notes: notes || null,
-        gradegroup: gradegroup ?? requester?.gradegroup ?? null,
-        status: data.success ? 'approved' : 'rejected',
-      };
-
-      const itemNameMap = {};
-      for (const item of (itemNamesResult.data || [])) {
-        itemNameMap[item.id] = item.name;
-      }
-      const emailItems = items.map(i => ({
-        name: itemNameMap[i.item_id] || 'Unknown Item',
-        quantity_requested: i.quantity_requested,
-      }));
-
-      Promise.all([
-        notifyManagersNewRequest(requestData, requester, managers, emailItems),
-        notifyRequesterRequestCreated(requestData, requester, emailItems),
-      ]).catch(err => console.error('Email error:', err));
-    } catch (emailErr) {
-      console.error('Email error:', emailErr);
-    }
+    const requestData = {
+      ...data,
+      start_time,
+      end_time,
+      notes: notes || null,
+      gradegroup: gradegroup ?? null,
+      status: data.success ? 'approved' : 'rejected',
+    };
+    runInBackground(
+      sendNewRequestEmails(data.request_id || 'unknown', requestData, req.user.id, items)
+    );
   } catch (err) {
     console.error('createRequest error:', err);
     return res.status(500).json({ error: 'Internal server error' });
@@ -271,6 +247,7 @@ const cancelRequest = async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
 
+    await invalidateAvailability();
     return res.status(200).json(data);
   } catch (err) {
     console.error('cancelRequest error:', err);
@@ -441,82 +418,42 @@ const updateRequestStatus = async (req, res) => {
       });
     }
 
-    const { data: request, error: lookupError } = await supabase
-      .from('requests')
-      .select('id, status')
-      .eq('id', id)
-      .maybeSingle();
-
-    if (lookupError) return res.status(500).json({ error: lookupError.message });
-    if (!request) return res.status(404).json({ error: 'Request not found' });
-
-    if (request.status === newStatus) {
-      return res.status(400).json({ error: `Request is already "${newStatus}"` });
-    }
-
-    const { data, error } = await supabase
-      .from('requests')
-      .update({ status: newStatus })
-      .eq('id', id)
-      .select()
-      .single();
+    const { data, error } = await supabase.rpc('change_request_status', {
+      p_request_id: id,
+      p_new_status: newStatus,
+    });
 
     if (error) return res.status(500).json({ error: error.message });
 
-    res.status(200).json(data);
-
-    // ── Fire-and-forget email notification ────────────────────────────────────
-    try {
-      const { data: fullRequest, error: reqError } = await supabase
-        .from('requests')
-        .select(`
-          id, requester_id, start_time, end_time, notes, status,
-          gradegroup,
-          request_items (
-            quantity_requested,
-            items ( id, name )
-          )
-        `)
-        .eq('id', id)
-        .single();
-
-      if (reqError) {
-        console.error('Email data fetch error:', reqError);
-        return;
+    if (!data?.success) {
+      if (data?.code === 'not_found') {
+        return res.status(404).json({ error: 'Request not found' });
       }
-
-      const { data: requester, error: userError } = await supabase
-        .from('users')
-        .select('id, full_name, gmail, phone, gradegroup')
-        .eq('id', fullRequest.requester_id)
-        .single();
-
-      if (userError) {
-        console.error('Email data fetch error:', userError);
-        return;
+      if (data?.code === 'unchanged') {
+        return res.status(400).json({ error: `Request is already "${newStatus}"` });
       }
-
-      const emailItems = (fullRequest.request_items || []).map(ri => ({
-        name: ri.items?.name || 'Unknown Item',
-        quantity_requested: ri.quantity_requested,
-      }));
-
-      const { data: changedBy, error: changedByError } = await supabase
-        .from('users')
-        .select('id, full_name, gmail')
-        .eq('id', req.user.id)
-        .single();
-
-      if (changedByError) {
-        console.error('Email data fetch error:', changedByError);
-        return;
+      if (data?.code === 'invalid_status') {
+        return res.status(400).json({
+          error: `Invalid status. Must be one of: ${VALID_STATUSES.join(', ')}`,
+        });
       }
-
-      notifyRequesterStatusChange(fullRequest, requester, emailItems, changedBy)
-        .catch(err => console.error('Email error:', err));
-    } catch (emailErr) {
-      console.error('Email error:', emailErr);
+      if (data?.code === 'no_items') {
+        return res.status(409).json({
+          error: 'This request has no items attached (rejected requests do not store items), so it cannot be reinstated. Please create a new request instead.',
+        });
+      }
+      if (data?.code === 'conflict') {
+        return res.status(409).json({
+          error: 'Some items are unavailable in this window',
+          conflicts: data.conflicts,
+        });
+      }
+      return res.status(500).json({ error: 'Unexpected status change result' });
     }
+
+    await invalidateAvailability();
+    res.status(200).json(data.request);
+    runInBackground(sendStatusChangeEmails(id, data.request, req.user.id));
   } catch (err) {
     console.error('updateRequestStatus error:', err);
     return res.status(500).json({ error: 'Internal server error' });

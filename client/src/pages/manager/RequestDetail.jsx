@@ -50,6 +50,7 @@ export default function RequestDetail() {
   }, [id]);
 
   const handleUpdateStatus = async (nextStatus) => {
+    const previousStatus = request.status;
     try {
       setActionLoading(true);
       setError(null);
@@ -70,8 +71,19 @@ export default function RequestDetail() {
       }
     } catch (err) {
       console.error('Failed to update request status:', err);
+      setRequest((prev) => (prev ? { ...prev, status: previousStatus } : null));
+      const conflicts = err.response?.status === 409 ? err.response.data?.conflicts : null;
+      const conflictMessage = Array.isArray(conflicts) && conflicts.length > 0
+        ? conflicts
+          .map((conflict) => (
+            `${conflict.item_name} - requested ${conflict.requested}, only ${conflict.available_in_window} available`
+          ))
+          .join('. ')
+        : null;
       setError(
-        err.response?.data?.error ||
+        conflictMessage
+          ? `Can't change status: ${conflictMessage}.`
+          : err.response?.data?.error ||
           'Failed to update status. Please try again.'
       );
     } finally {
@@ -95,7 +107,7 @@ export default function RequestDetail() {
     );
   }
 
-  if (error || !request) {
+  if (!request) {
     return (
       <div className={styles.container}>
         <div className={styles.error}>{error || 'Request not found.'}</div>
@@ -119,6 +131,8 @@ export default function RequestDetail() {
           &larr; Back to Dashboard
         </Link>
       </div>
+
+      {error && <div className={styles.error}>{error}</div>}
 
       <div className={styles.header}>
         <div>

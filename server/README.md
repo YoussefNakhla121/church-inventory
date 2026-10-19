@@ -170,7 +170,7 @@ server/
 | GET    | `/api/requests/mine`       | Requester | My requests with items                  |
 | PATCH  | `/api/requests/:id/cancel` | Requester | Cancel own request                      |
 | GET    | `/api/requests`            | Manager   | All requests, optional `?status=` filter|
-| PATCH  | `/api/requests/:id/status` | Manager   | Advance status (approved→prepared→completed) |
+| PATCH  | `/api/requests/:id/status` | Manager   | Manager can set any valid status; moving cancelled/rejected/completed back to approved/prepared checks availability in `change_request_status` (409 with per-item conflicts) |
 
 ### Comments
 | Method | Route                          | Role    | Description                            |
@@ -246,3 +246,7 @@ The function accepts:
 - `p_items` — JSON array of `{ item_id, quantity_requested }`
 
 Returns: `{ success: boolean, request_id?: uuid, conflicts?: [...] }`
+
+Deploy the `change_request_status(p_request_id uuid, p_new_status text)` PostgreSQL
+function in Supabase. It handles manager status changes and availability checks when
+reactivating requests.
