@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getItems, getItemsAll, deactivateItem, reactivateItem } from '../../api/items';
 import ItemCard from '../../components/ItemCard';
+import ImageLightbox from '../../components/ImageLightbox';
 import styles from './ItemManagement.module.css';
 
 export default function ItemManagement() {
@@ -12,6 +13,7 @@ export default function ItemManagement() {
 
   // Undo/status change tracking state
   const [successMsg, setSuccessMsg] = useState(null);
+  const [lightbox, setLightbox] = useState({ isOpen: false, src: '', alt: '' });
 
   const fetchItems = async () => {
     try {
@@ -116,6 +118,7 @@ export default function ItemManagement() {
             <ItemCard
               key={item.id}
               item={item}
+              onPhotoClick={() => setLightbox({ isOpen: true, src: item.photo_url, alt: item.name })}
               actions={
                 <div className={styles.cardActionGroup}>
                   <div className={styles.cardRow}>
@@ -147,6 +150,13 @@ export default function ItemManagement() {
           ))}
         </div>
       )}
+
+      <ImageLightbox
+        src={lightbox.src}
+        alt={lightbox.alt}
+        isOpen={lightbox.isOpen}
+        onClose={() => setLightbox({ isOpen: false, src: '', alt: '' })}
+      />
     </div>
   );
 }
