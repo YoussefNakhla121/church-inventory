@@ -461,6 +461,7 @@ const updateRequestStatus = async (req, res) => {
 };
 
 module.exports = {
+  parsePaging,
   createRequest,
   getMyRequests,
   cancelRequest,

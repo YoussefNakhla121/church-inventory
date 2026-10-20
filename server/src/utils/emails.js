@@ -362,6 +362,8 @@ async function sendStatusChangeEmails(requestId, request, changedById) {
 }
 
 module.exports = {
+  isValidEmail,
+  fmtDate,
   notifyManagersNewRequest,
   notifyRequesterRequestCreated,
   notifyRequesterStatusChange,
