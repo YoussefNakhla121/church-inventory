@@ -5,8 +5,9 @@
   "main": "src/index.js",
   "scripts": {
     "start": "node src/index.js",
-    "dev": "nodemon src/index.js",
-    "build": "node -e \"console.log('Vercel serverless API is ready')\""
+    "dev": "node --watch src/index.js",
+    "build": "node -e \"console.log('Vercel serverless API is ready')\"",
+    "test": "vitest"
   },
   "dependencies": {
     "@getbrevo/brevo": "^5.0.4",
@@ -19,11 +20,11 @@
     "express": "^4.19.2",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.0",
-    "nodemailer": "^9.0.1",
+    "nodemailer": "^10.1.7",
     "sharp": "^0.35.5",
     "uuid": "^11.0.0"
   },
   "devDependencies": {
-    "nodemon": "^3.1.14"
+    "vitest": "^5.0.5"
   }
 }
