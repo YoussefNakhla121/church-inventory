@@ -5,6 +5,7 @@ const {
 } = require('../utils/emails');
 const { runInBackground } = require('../utils/background');
 const { invalidateAvailability } = require('../utils/cacheKeys');
+const { calculateTotalPrice } = require('../utils/pricing');
 
 // All valid statuses a manager can assign
 const VALID_STATUSES = ['approved', 'prepared', 'completed', 'cancelled', 'rejected'];
@@ -104,26 +105,7 @@ const createRequest = async (req, res) => {
             priceMap[item.id] = item.price ?? 0;
           }
 
-          // Determine number of days (ceiling, so a partial day = 1 day)
-          const durationMs = end - start;
-          const numDays = Math.ceil(durationMs / (1000 * 60 * 60 * 24));
-          const isMultiDay = numDays > 1;
-
-          let totalPrice = 0;
-          for (const item of items) {
-            const unitPrice = priceMap[item.item_id] ?? 0;
-            const qty = item.quantity_requested;
-            if (isMultiDay) {
-              // Multi-day: price × 2 × numDays × quantity
-              totalPrice += unitPrice * 2 * numDays * qty;
-            } else {
-              // Single-day: price × quantity
-              totalPrice += unitPrice * qty;
-            }
-          }
-
-          // Round to 2 decimal places to avoid floating-point drift
-          totalPrice = Math.round(totalPrice * 100) / 100;
+          const totalPrice = calculateTotalPrice(items, priceMap, start, end);
 
           await supabase
             .from('requests')
