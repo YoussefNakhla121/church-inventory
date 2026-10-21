@@ -5,22 +5,14 @@ const supabase = require('../config/supabase');
 const SALT_ROUNDS = 10;
 const JWT_EXPIRES_IN = '7d';
 
-/**
- * POST /api/auth/register
- * Body: { full_name, gmail, password, phone, role, grade_group }
- */
-const register = async (req, res) => {
+const createUser = async (req, res, role) => {
   try {
-    const { full_name, gmail, password, phone, role, gradegroup } = req.body;
+    const { full_name, gmail, password, phone, gradegroup } = req.body;
     const trimmedFullName = full_name?.trim();
 
     // ── Validate required fields ──────────────────────────────────────────────
-    if (!trimmedFullName || !gmail || !password || !phone || !role || !gradegroup) {
-      return res.status(400).json({ error: 'full_name, gmail, password, phone, role, and grade_group are required' });
-    }
-
-    if (!['requester', 'manager'].includes(role)) {
-      return res.status(400).json({ error: 'role must be "requester" or "manager"' });
+    if (!trimmedFullName || !gmail || !password || !phone || !gradegroup) {
+      return res.status(400).json({ error: 'full_name, gmail, password, phone, and grade_group are required' });
     }
 
     if (password.length < 6) {
@@ -68,6 +60,18 @@ const register = async (req, res) => {
     return res.status(500).json({ error: 'Internal server error' });
   }
 };
+
+/**
+ * POST /api/auth/register
+ * Body: { full_name, gmail, password, phone, grade_group }
+ */
+const register = (req, res) => createUser(req, res, 'requester');
+
+/**
+ * POST /api/auth/register-manager
+ * Body: { full_name, gmail, password, phone, grade_group }
+ */
+const registerManager = (req, res) => createUser(req, res, 'manager');
 
 /**
  * POST /api/auth/login
@@ -184,4 +188,4 @@ const updateProfile = async (req, res) => {
   }
 };
 
-module.exports = { register, login, updateProfile };
+module.exports = { register, registerManager, login, updateProfile };

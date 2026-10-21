@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { register } from '../../api/auth';
+import { registerManager } from '../../api/auth';
 import styles from '../auth/Login.module.css';
 
 export default function CreateManagerAccount() {
@@ -20,7 +20,7 @@ export default function CreateManagerAccount() {
       setLoading(true);
       setError(null);
       setSuccess(null);
-      await register({ 
+      await registerManager({
         full_name: fullName.trim(),
         gmail: gmail.trim(), 
         password, 
