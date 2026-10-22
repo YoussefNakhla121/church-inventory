@@ -104,7 +104,7 @@ describe('Express app', () => {
       .set('Content-Type', 'application/json')
       .send('{bad');
 
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(501);
     expect(response.body).toEqual({ error: 'Internal server error' });
   });
 });
