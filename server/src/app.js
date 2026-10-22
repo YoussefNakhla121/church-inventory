@@ -8,6 +8,8 @@ const commentRoutes = require('./routes/comments');
 const conditionReportRoutes = require('./routes/conditionReports');
 const gradeGroupsRoutes = require('./routes/gradeGroups');
 
+// added new line in app.js
+
 const app = express();
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
