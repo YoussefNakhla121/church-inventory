@@ -12,12 +12,15 @@ const getComments = async (req, res) => {
     // Verify the request exists
     const { data: request, error: reqError } = await supabase
       .from('requests')
-      .select('id')
+      .select('id, requester_id')
       .eq('id', id)
       .maybeSingle();
 
     if (reqError) return res.status(500).json({ error: reqError.message });
     if (!request) return res.status(404).json({ error: 'Request not found' });
+    if (req.user.role === 'requester' && request.requester_id !== req.user.id) {
+      return res.status(403).json({ error: 'You can only read comments on your own requests' });
+    }
 
     const { data, error } = await supabase
       .from('request_comments')

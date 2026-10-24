@@ -35,9 +35,8 @@ describe('mocked comments and condition reports API', () => {
     expect(insert.insert).toHaveBeenCalledWith({ request_id: 'abc', author_id: 'user-1', body: 'hello' });
   });
 
-  // This documents the known authorization bug in comment reads.
-  it.fails('does not let a requester read another user’s comments', async () => {
-    // KNOWN BUG: remove .fails after fixing getComments
+  // This proves requesters cannot read comments on another user's request.
+  it('does not let a requester read another user’s comments', async () => {
     mockTables(supabase, {
       requests: fakeQuery({ data: { id: 'abc', requester_id: 'other-user' }, error: null }),
       request_comments: fakeQuery({ data: [], error: null }),
