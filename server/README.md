@@ -205,7 +205,7 @@ Item photos are submitted as `multipart/form-data` with the field name `photo`.
 - Max file size: **1 MB** (server-side guard)
 - Frontend should compress images to < 300 KB before sending
 - Files are never stored on the Express server — streamed directly to Supabase Storage bucket `item-photos`
-- The returned `photo_url` is the full public URL stored in `items.photo_url`
+- The returned `photo_url` is a full public URL; `items.photo_url` stores the uploaded filename
 
 ---
 

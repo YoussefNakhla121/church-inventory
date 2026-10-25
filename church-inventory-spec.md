@@ -356,7 +356,7 @@ GET    /api/requests/:id/condition-reports    Manager only: view condition repor
 ## Supabase Storage (Photos)
 
 - Bucket: `item-photos`, set to **public** (so photo URLs work without auth).
-- `items.photo_url` stores the full public URL returned by Supabase after upload.
+- `items.photo_url` stores the uploaded filename; API responses expand it to the full public URL.
 - On item deactivation, photo is kept (item may be reactivated later).
 
 ### Upload Flow
@@ -365,8 +365,8 @@ Manager picks a photo (file input in React)
     → browser-image-compression resizes/compresses it (< 300 KB)
         → POST /api/items (multipart/form-data, via multer in Express)
             → Express uploads to Supabase Storage
-                → Supabase returns public URL
-                    → URL saved to items.photo_url in the database
+                → Supabase returns the stored filename
+                    → Filename saved to items.photo_url in the database
 ```
 
 Photos are never stored on the Express server — it receives the file and immediately forwards it to Supabase Storage.
