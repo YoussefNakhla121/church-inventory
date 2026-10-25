@@ -9,7 +9,6 @@ export default function Register() {
   const [gmail, setGmail] = useState('');
   const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
-  const [role, setRole] = useState('requester');
   const [gradegroup, setGradegroup] = useState('');
   const [gradeGroups, setGradeGroups] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -31,11 +30,11 @@ export default function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!fullName.trim() || !gmail.trim() || !password || !phone.trim() || !role || !gradegroup) return;
+    if (!fullName.trim() || !gmail.trim() || !password || !phone.trim() || !gradegroup) return;
     try {
       setLoading(true);
       setError(null);
-      await register({ full_name: fullName.trim(), gmail: gmail.trim(), password, phone: phone.trim(), role, gradegroup: gradegroup });
+      await register({ full_name: fullName.trim(), gmail: gmail.trim(), password, phone: phone.trim(), gradegroup });
       navigate('/login', { state: { message: 'Registration successful! Please sign in.' } });
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to register. Gmail might already be taken.');

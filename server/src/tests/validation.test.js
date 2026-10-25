@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import request from 'supertest';
 import { createRequire } from 'module';
 import { authHeader, quietConsole } from './helpers';
+import { fakeQuery } from './supabaseMock';
 
 const require = createRequire(import.meta.url);
 const app = require('../app');
@@ -107,6 +108,39 @@ describe('auth validation', () => {
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({ error: 'password must be at least 6 characters' });
+  });
+
+  it('rejects an admin registration without a gradegroup', async () => {
+    const response = await request(app)
+      .post('/api/auth/register-admin')
+      .set(authHeader('manager'))
+      .send({ full_name: 'Admin', gmail: 'admin@example.com', password: 'secret123', phone: '123' });
+
+    expect(response.status).toBe(400);
+    expect(response.body.error).toMatch(/required/);
+  });
+
+  it('rejects an admin registration with an unknown gradegroup', async () => {
+    supabase.from.mockImplementation((table) => {
+      if (table === 'gradegroup') {
+        return fakeQuery({ data: [{ name: 'Grade 1' }], error: null });
+      }
+      throw new Error('DB must not be called in validation tests');
+    });
+
+    const response = await request(app)
+      .post('/api/auth/register-admin')
+      .set(authHeader('manager'))
+      .send({
+        full_name: 'Admin',
+        gmail: 'admin@example.com',
+        password: 'secret123',
+        phone: '123',
+        gradegroup: 'Unknown',
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: 'Invalid gradegroup for admin' });
   });
 
   // This proves profile updates require all profile fields before database access.

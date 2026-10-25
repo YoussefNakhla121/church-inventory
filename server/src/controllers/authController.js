@@ -1,6 +1,7 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const supabase = require('../config/supabase');
+const { ADMIN_EXTRA_GRADE_GROUPS, getGradeGroupNames } = require('../utils/gradeGroups');
 
 const SALT_ROUNDS = 10;
 const JWT_EXPIRES_IN = '7d';
@@ -9,6 +10,7 @@ const createUser = async (req, res, role) => {
   try {
     const { full_name, gmail, password, phone, gradegroup } = req.body;
     const trimmedFullName = full_name?.trim();
+    let storedGradegroup = gradegroup;
 
     // ── Validate required fields ──────────────────────────────────────────────
     if (!trimmedFullName || !gmail || !password || !phone || !gradegroup) {
@@ -17,6 +19,19 @@ const createUser = async (req, res, role) => {
 
     if (password.length < 6) {
       return res.status(400).json({ error: 'password must be at least 6 characters' });
+    }
+
+    if (role === 'admin') {
+      const trimmedGradegroup = typeof gradegroup === 'string' ? gradegroup.trim() : '';
+      const allowedGradeGroups = [
+        ...(await getGradeGroupNames()),
+        ...ADMIN_EXTRA_GRADE_GROUPS,
+      ];
+
+      if (!allowedGradeGroups.includes(trimmedGradegroup)) {
+        return res.status(400).json({ error: 'Invalid gradegroup for admin' });
+      }
+      storedGradegroup = trimmedGradegroup;
     }
 
     // ── Check for existing gmail ────────────────────────────────────────────────
@@ -39,7 +54,7 @@ const createUser = async (req, res, role) => {
 
     const { data: newUser, error: insertError } = await supabase
       .from('users')
-      .insert({ full_name: trimmedFullName, gmail, password_hash, phone, role, gradegroup })
+      .insert({ full_name: trimmedFullName, gmail, password_hash, phone, role, gradegroup: storedGradegroup })
       .select('id, full_name, gmail, role, gradegroup')
       .single();
 
@@ -72,6 +87,12 @@ const register = (req, res) => createUser(req, res, 'requester');
  * Body: { full_name, gmail, password, phone, grade_group }
  */
 const registerManager = (req, res) => createUser(req, res, 'manager');
+
+/**
+ * POST /api/auth/register-admin
+ * Body: { full_name, gmail, password, phone, gradegroup }
+ */
+const registerAdmin = (req, res) => createUser(req, res, 'admin');
 
 /**
  * POST /api/auth/login
@@ -188,4 +209,4 @@ const updateProfile = async (req, res) => {
   }
 };
 
-module.exports = { register, registerManager, login, updateProfile };
+module.exports = { register, registerManager, registerAdmin, login, updateProfile, createUser };

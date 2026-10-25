@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const supabase = require('../config/supabase');
-const { cacheGet, cacheSet } = require('../config/redis');
-const { KEYS, TTL } = require('../utils/cacheKeys');
+const { cacheGet } = require('../config/redis');
+const { KEYS } = require('../utils/cacheKeys');
+const { getGradeGroupNames } = require('../utils/gradeGroups');
 
 router.get('/', async (req, res) => {
   try {
@@ -12,22 +12,7 @@ router.get('/', async (req, res) => {
       return res.status(200).json(cached);
     }
 
-    const { data, error } = await supabase
-      .from('gradegroup')
-      .select('name')
-      .not('name', 'is', null)
-      .order('name', { ascending: true });
-
-    if (error) {
-      return res.status(500).json({ error: error.message });
-    }
-
-    const values = (data || [])
-      .map((item) => item.name)
-      .filter((name) => typeof name === 'string' && name.trim().length > 0)
-      .map((name) => name.trim());
-
-    await cacheSet(KEYS.GRADEGROUPS, values, TTL.GRADEGROUPS);
+    const values = await getGradeGroupNames();
     res.set('X-Cache', 'MISS');
     return res.status(200).json(values);
   } catch (err) {

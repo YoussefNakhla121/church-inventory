@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { updateProfile as updateProfileApi, getGradeGroups } from '../../api/auth';
+import { ADMIN_EXTRA_GRADE_GROUPS } from '../../constants/gradeGroups';
 import styles from './ProfileEdit.module.css';
 
 export default function ProfileEdit() {
@@ -18,6 +19,9 @@ export default function ProfileEdit() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
   const [gradeGroups, setGradeGroups] = useState([]);
+  const availableGradeGroups = user?.role === 'admin'
+    ? [...new Set([...gradeGroups, ...ADMIN_EXTRA_GRADE_GROUPS])]
+    : gradeGroups;
 
   useEffect(() => {
     const fetchGradeGroups = async () => {
@@ -142,11 +146,11 @@ export default function ProfileEdit() {
                   name="gradegroup"
                   value={formData.gradegroup}
                   onChange={handleChange}
-                  disabled={loading || gradeGroups.length === 0}
+                  disabled={loading || availableGradeGroups.length === 0}
                   required
                 >
-                  <option value="">{gradeGroups.length ? 'Select Grade Group' : 'Loading grade groups...'}</option>
-                  {gradeGroups.map((group) => (
+                  <option value="">{availableGradeGroups.length ? 'Select Grade Group' : 'Loading grade groups...'}</option>
+                  {availableGradeGroups.map((group) => (
                     <option key={group} value={group}>{group}</option>
                   ))}
                 </select>
@@ -178,7 +182,7 @@ export default function ProfileEdit() {
                 className={styles.createManagerBtn}
                 onClick={() => navigate('/manager/create-account')}
               >
-                ➕ Create Manager Account
+                ➕ Create Manager/Admin Account
               </button>
             </div>
           )}

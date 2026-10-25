@@ -13,6 +13,8 @@ const MANAGER_ROUTES = [
   ['get', '/api/requests/abc/condition-reports'],
   ['post', '/api/requests/abc/condition-reports'],
   ['post', '/api/items'],
+  ['post', '/api/auth/register-manager'],
+  ['post', '/api/auth/register-admin'],
   ['patch', '/api/items/abc'],
   ['patch', '/api/items/abc/deactivate'],
   ['patch', '/api/items/abc/reactivate'],
@@ -39,6 +41,13 @@ describe('manager-only routes through HTTP', () => {
   // This proves authenticated requesters cannot access manager-only routes.
   it.each(MANAGER_ROUTES)('%s %s rejects requester tokens', async (method, path) => {
     const response = await callRoute([method, path], authHeader('requester'));
+
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({ error: 'Access denied: managers only' });
+  });
+
+  it.each(MANAGER_ROUTES)('%s %s rejects admin tokens', async (method, path) => {
+    const response = await callRoute([method, path], authHeader('admin'));
 
     expect(response.status).toBe(403);
     expect(response.body).toEqual({ error: 'Access denied: managers only' });

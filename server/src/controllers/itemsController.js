@@ -47,9 +47,9 @@ const getItems = async (req, res) => {
     }
 
     // IMPORTANT: Redis holds the full rows (with price). Strip price per role AFTER reading.
-    const items = (req.user?.role === 'requester'
-      ? rows.map(({ price, ...item }) => item)
-      : rows).map(withPhotoUrl);
+    const items = (req.user?.role === 'manager'
+      ? rows
+      : rows.map(({ price, ...item }) => item)).map(withPhotoUrl);
 
     res.set('X-Cache', cacheStatus);
     return res.status(200).json(items);

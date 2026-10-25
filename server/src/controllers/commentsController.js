@@ -18,7 +18,7 @@ const getComments = async (req, res) => {
 
     if (reqError) return res.status(500).json({ error: reqError.message });
     if (!request) return res.status(404).json({ error: 'Request not found' });
-    if (req.user.role === 'requester' && request.requester_id !== req.user.id) {
+    if (req.user.role !== 'manager' && request.requester_id !== req.user.id) {
       return res.status(403).json({ error: 'You can only read comments on your own requests' });
     }
 
@@ -74,7 +74,7 @@ const postComment = async (req, res) => {
     if (!request) return res.status(404).json({ error: 'Request not found' });
 
     // Requesters can only comment on their own requests
-    if (req.user.role === 'requester' && request.requester_id !== req.user.id) {
+    if (req.user.role !== 'manager' && request.requester_id !== req.user.id) {
       return res.status(403).json({ error: 'You can only comment on your own requests' });
     }
 

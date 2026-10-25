@@ -24,6 +24,13 @@ describe('mocked items API', () => {
     expect(response.body[0]).not.toHaveProperty('price');
   });
 
+  it('hides prices from admins', async () => {
+    mockTables(supabase, { items: fakeQuery({ data: rows, error: null }) });
+    const response = await request(app).get('/api/items').set(authHeader('admin'));
+    expect(response.status).toBe(200);
+    expect(response.body[0]).not.toHaveProperty('price');
+  });
+
   // This proves managers can see item prices.
   it('includes prices for managers', async () => {
     mockTables(supabase, { items: fakeQuery({ data: rows, error: null }) });

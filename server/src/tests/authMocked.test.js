@@ -73,6 +73,38 @@ describe('mocked authentication API', () => {
     expect(inserted.password_hash).toMatch(/^\$2/);
   });
 
+  it.each(['Grade 1', 'ابتدائي'])('registers an admin with allowed gradegroup %s', async (gradegroup) => {
+    const lookup = fakeQuery({ data: null, error: null });
+    const insert = fakeQuery({ data: { id: 'a1', full_name: 'Admin', gmail: 'admin@example.com', role: 'admin', gradegroup }, error: null });
+    mockTables(supabase, {
+      gradegroup: fakeQuery({ data: [{ name: 'Grade 1' }], error: null }),
+      users: [lookup, insert],
+    });
+
+    const response = await request(app)
+      .post('/api/auth/register-admin')
+      .set(authHeader('manager'))
+      .send({ ...registerBody, gmail: `admin-${gradegroup}@example.com`, gradegroup });
+    const inserted = insert.insert.mock.calls[0][0];
+
+    expect(response.status).toBe(201);
+    expect(inserted.role).toBe('admin');
+    expect(inserted.password_hash).toMatch(/^\$2/);
+  });
+
+  it('public registration always creates a requester despite a role in the body', async () => {
+    const lookup = fakeQuery({ data: null, error: null });
+    const insert = fakeQuery({ data: { id: 'u2', role: 'requester' }, error: null });
+    mockTables(supabase, { users: [lookup, insert] });
+
+    const response = await request(app)
+      .post('/api/auth/register')
+      .send({ ...registerBody, role: 'admin' });
+
+    expect(response.status).toBe(201);
+    expect(insert.insert.mock.calls[0][0].role).toBe('requester');
+  });
+
   // This documents that the manager-registration route currently requires authentication.
   it('currently rejects manager registration without a token', async () => {
     // SECURITY: ideally rejected unless the caller is a manager

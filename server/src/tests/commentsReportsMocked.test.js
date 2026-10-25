@@ -45,6 +45,18 @@ describe('mocked comments and condition reports API', () => {
     expect([403, 404]).toContain(response.status);
   });
 
+  it('does not let an admin read another user’s comments', async () => {
+    mockTables(supabase, { requests: fakeQuery({ data: { id: 'abc', requester_id: 'other-user' }, error: null }) });
+    const response = await request(app).get('/api/requests/abc/comments').set(authHeader('admin'));
+    expect(response.status).toBe(403);
+  });
+
+  it('does not let an admin post comments on another user’s request', async () => {
+    mockTables(supabase, { requests: fakeQuery({ data: { id: 'abc', requester_id: 'other-user' }, error: null }) });
+    const response = await request(app).post('/api/requests/abc/comments').set(authHeader('admin')).send({ body: 'hello' });
+    expect(response.status).toBe(403);
+  });
+
   // This proves condition reports require an existing request.
   it('returns 404 for a missing condition-report request', async () => {
     mockTables(supabase, { requests: fakeQuery({ data: null, error: null }) });
