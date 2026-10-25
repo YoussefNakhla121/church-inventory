@@ -1,5 +1,5 @@
 const supabase = require('../config/supabase');
-const { uploadToStorage, removeFromStorage } = require('../utils/storage');
+const { uploadToStorage, withPhotoUrl, removeFromStorage } = require('../utils/storage');
 const { v4: uuidv4 } = require('uuid');
 const { insertItem, validateItemInput } = require('../services/itemService');
 const { cacheGet, cacheSet } = require('../config/redis');
@@ -47,9 +47,9 @@ const getItems = async (req, res) => {
     }
 
     // IMPORTANT: Redis holds the full rows (with price). Strip price per role AFTER reading.
-    const items = req.user?.role === 'requester'
+    const items = (req.user?.role === 'requester'
       ? rows.map(({ price, ...item }) => item)
-      : rows;
+      : rows).map(withPhotoUrl);
 
     res.set('X-Cache', cacheStatus);
     return res.status(200).json(items);
@@ -285,7 +285,7 @@ const createItem = async (req, res) => {
       photo_url,
     });
 
-    return res.status(201).json(data);
+    return res.status(201).json(withPhotoUrl(data));
   } catch (err) {
     console.error('createItem error:', err);
     if (err.statusCode) return res.status(err.statusCode).json({ error: err.message });
@@ -366,7 +366,7 @@ const updateItem = async (req, res) => {
       }
     }
 
-    return res.status(200).json(data);
+    return res.status(200).json(withPhotoUrl(data));
   } catch (err) {
     console.error('updateItem error:', err);
     return res.status(500).json({ error: err.message || 'Internal server error' });
@@ -404,7 +404,7 @@ const deactivateItem = async (req, res) => {
 
     await Promise.all([invalidateItems(), invalidateAvailability()]);
 
-    return res.status(200).json(data);
+    return res.status(200).json(withPhotoUrl(data));
   } catch (err) {
     console.error('deactivateItem error:', err);
     return res.status(500).json({ error: 'Internal server error' });
@@ -442,7 +442,7 @@ const reactivateItem = async (req, res) => {
 
     await Promise.all([invalidateItems(), invalidateAvailability()]);
 
-    return res.status(200).json(data);
+    return res.status(200).json(withPhotoUrl(data));
   } catch (err) {
     console.error('reactivateItem error:', err);
     return res.status(500).json({ error: 'Internal server error' });

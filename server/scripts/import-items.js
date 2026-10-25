@@ -94,7 +94,7 @@ const importRow = async (row, imagesDirectory) => {
   const compressed = await compressImage(imageBuffer, mimetype);
   const extension = path.extname(imagePath).slice(1);
   const filename = `${uuidv4()}.${extension}`;
-  const photoUrl = await uploadToStorage(compressed.buffer, filename, compressed.mimetype);
+  const photoFilename = await uploadToStorage(compressed.buffer, filename, compressed.mimetype);
 
   return insertItem({
     name: row.name,
@@ -102,7 +102,7 @@ const importRow = async (row, imagesDirectory) => {
     total_quantity: row.total_quantity,
     category: row.category,
     price: row.price,
-    photo_url: photoUrl,
+    photo_url: photoFilename,
   });
 };
 

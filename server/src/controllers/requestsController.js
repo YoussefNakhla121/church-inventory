@@ -6,6 +6,7 @@ const {
 const { runInBackground } = require('../utils/background');
 const { invalidateAvailability } = require('../utils/cacheKeys');
 const { calculateTotalPrice } = require('../utils/pricing');
+const { photoUrl } = require('../utils/storage');
 
 // All valid statuses a manager can assign
 const VALID_STATUSES = ['approved', 'prepared', 'completed', 'cancelled', 'rejected'];
@@ -19,6 +20,16 @@ const parsePaging = (query) => {
   const from = (page - 1) * pageSize;
   return { page, pageSize, from, to: from + pageSize - 1 };
 };
+
+const expandRequestPhotos = (request) => ({
+  ...request,
+  request_items: (request.request_items || []).map((requestItem) => ({
+    ...requestItem,
+    items: requestItem.items
+      ? { ...requestItem.items, photo_url: photoUrl(requestItem.items.photo_url) }
+      : requestItem.items,
+  })),
+});
 
 /**
  * POST /api/requests
@@ -180,7 +191,12 @@ const getMyRequests = async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
 
-    return res.status(200).json({ data, total: count || 0, page, pageSize });
+    return res.status(200).json({
+      data: (data || []).map(expandRequestPhotos),
+      total: count || 0,
+      page,
+      pageSize,
+    });
   } catch (err) {
     console.error('getMyRequests error:', err);
     return res.status(500).json({ error: 'Internal server error' });
@@ -311,7 +327,12 @@ const getAllRequests = async (req, res) => {
 
     if (error) return res.status(500).json({ error: error.message });
 
-    return res.status(200).json({ data, total: count || 0, page, pageSize });
+    return res.status(200).json({
+      data: (data || []).map(expandRequestPhotos),
+      total: count || 0,
+      page,
+      pageSize,
+    });
   } catch (err) {
     console.error('getAllRequests error:', err);
     return res.status(500).json({ error: 'Internal server error' });
@@ -374,7 +395,7 @@ const getRequestById = async (req, res) => {
     }
 
     const { requester_id, ...request } = data;
-    return res.status(200).json(request);
+    return res.status(200).json(expandRequestPhotos(request));
   } catch (err) {
     console.error('getRequestById error:', err);
     return res.status(500).json({ error: 'Internal server error' });
