@@ -1,5 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getRoleHome } from '../utils/roleHome';
 
 export default function ManagerRoute({ children }) {
   const { isAuthenticated, user } = useAuth();
@@ -10,7 +11,11 @@ export default function ManagerRoute({ children }) {
   }
 
   if (user?.role !== 'manager') {
-    return <Navigate to="/" replace />;
+    const home = getRoleHome(user?.role);
+    if (home === location.pathname) {
+      return <Navigate to="/login" replace />;
+    }
+    return <Navigate to={home} replace />;
   }
 
   return children;

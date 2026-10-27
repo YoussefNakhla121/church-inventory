@@ -65,6 +65,7 @@ export default function CreateManagerAccount() {
       setPassword('');
       setPhone('');
       setGradegroup('');
+      setRole('manager');
       setTimeout(() => navigate('/manager'), 2000);
     } catch (err) {
       setError(err.response?.data?.error || `Failed to create ${isAdmin ? 'admin' : 'manager'} account. Gmail might already be taken.`);

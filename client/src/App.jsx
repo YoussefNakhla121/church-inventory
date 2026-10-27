@@ -5,6 +5,7 @@ import { AuthProvider } from './context/AuthContext';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import ManagerRoute from './components/ManagerRoute';
+import RoleRoute from './components/RoleRoute';
 
 // Pages - Auth
 import Login from './pages/auth/Login';
@@ -25,6 +26,7 @@ import ItemManagement from './pages/manager/ItemManagement';
 import ItemForm from './pages/manager/ItemForm';
 import ItemConditionHistory from './pages/manager/ItemConditionHistory';
 import CreateManagerAccount from './pages/manager/CreateManagerAccount';
+import AdminPayments from './pages/admin/AdminPayments';
 
 export default function App() {
   return (
@@ -52,33 +54,43 @@ export default function App() {
               <Route
                 path="/"
                 element={
-                  <ProtectedRoute>
+                  <RoleRoute allow={['requester', 'manager']}>
                     <ItemBrowser />
-                  </ProtectedRoute>
+                  </RoleRoute>
                 }
               />
               <Route
                 path="/requests"
                 element={
-                  <ProtectedRoute>
+                  <RoleRoute allow={['requester', 'manager']}>
                     <MyRequests />
-                  </ProtectedRoute>
+                  </RoleRoute>
                 }
               />
               <Route
                 path="/requests/new"
                 element={
-                  <ProtectedRoute>
+                  <RoleRoute allow={['requester', 'manager']}>
                     <NewRequest />
-                  </ProtectedRoute>
+                  </RoleRoute>
                 }
               />
               <Route
                 path="/requests/:id"
                 element={
-                  <ProtectedRoute>
+                  <RoleRoute allow={['requester', 'manager']}>
                     <RequesterRequestDetail />
-                  </ProtectedRoute>
+                  </RoleRoute>
+                }
+              />
+
+              {/* Admin Routes (Protected + Admin Role Required) */}
+              <Route
+                path="/admin"
+                element={
+                  <RoleRoute allow={['admin']}>
+                    <AdminPayments />
+                  </RoleRoute>
                 }
               />
 

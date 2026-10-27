@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { updateProfile as updateProfileApi, getGradeGroups } from '../../api/auth';
 import { ADMIN_EXTRA_GRADE_GROUPS } from '../../constants/gradeGroups';
+import { getRoleHome } from '../../utils/roleHome';
 import styles from './ProfileEdit.module.css';
 
 export default function ProfileEdit() {
@@ -24,6 +25,8 @@ export default function ProfileEdit() {
     : gradeGroups;
 
   useEffect(() => {
+    if (user?.role === 'manager') return;
+
     const fetchGradeGroups = async () => {
       try {
         const response = await getGradeGroups();
@@ -35,7 +38,7 @@ export default function ProfileEdit() {
     };
 
     fetchGradeGroups();
-  }, []);
+  }, [user?.role]);
 
   useEffect(() => {
     if (user) {
@@ -74,7 +77,7 @@ export default function ProfileEdit() {
       updateUserProfile(response.data.user);
       setSuccess(true);
       setTimeout(() => {
-        navigate('/');
+        navigate(getRoleHome(user?.role));
       }, 1500);
     } catch (err) {
       setError(err.response?.data?.error || 'Failed to update profile');
@@ -137,7 +140,7 @@ export default function ProfileEdit() {
               />
             </div>
 
-            {user?.role !== 'manager' && (
+            {user?.role === 'admin' ? (
               <div className={styles.inputGroup}>
                 <label className={styles.label} htmlFor="gradegroup">Grade/Group</label>
                 <select
@@ -148,9 +151,28 @@ export default function ProfileEdit() {
                   onChange={handleChange}
                   disabled={loading || availableGradeGroups.length === 0}
                   required
+                  dir="auto"
                 >
                   <option value="">{availableGradeGroups.length ? 'Select Grade Group' : 'Loading grade groups...'}</option>
                   {availableGradeGroups.map((group) => (
+                    <option key={group} value={group}>{group}</option>
+                  ))}
+                </select>
+              </div>
+            ) : user?.role !== 'manager' && (
+              <div className={styles.inputGroup}>
+                <label className={styles.label} htmlFor="gradegroup">Grade/Group</label>
+                <select
+                  id="gradegroup"
+                  className={styles.select}
+                  name="gradegroup"
+                  value={formData.gradegroup}
+                  onChange={handleChange}
+                  disabled={loading || gradeGroups.length === 0}
+                  required
+                >
+                  <option value="">{gradeGroups.length ? 'Select Grade Group' : 'Loading grade groups...'}</option>
+                  {gradeGroups.map((group) => (
                     <option key={group} value={group}>{group}</option>
                   ))}
                 </select>

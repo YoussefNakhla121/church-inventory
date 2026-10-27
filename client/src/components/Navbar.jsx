@@ -1,5 +1,6 @@
 import { NavLink, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getRoleHome } from '../utils/roleHome';
 import { useState } from 'react';
 import styles from './Navbar.module.css';
 
@@ -9,6 +10,7 @@ export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   if (!isAuthenticated) return null;
   const isManager = user?.role === 'manager';
+  const isAdmin = user?.role === 'admin';
   const name = user?.full_name?.trim() || '';
   const nameWords = name.split(/\s+/).filter(Boolean);
   const initials = nameWords.length > 1
@@ -26,7 +28,7 @@ export default function Navbar() {
 
   return (
     <nav className={styles.navbar}>
-      <Link to="/" className={styles.brand} onClick={handleNavClick}>
+      <Link to={getRoleHome(user?.role)} className={styles.brand} onClick={handleNavClick}>
         <div className={styles.brandIcon}>⛪</div>
         <div className={styles.brandText}>
           <span className={styles.brandName}>Wsa2l El 2daa7</span>
@@ -46,7 +48,18 @@ export default function Navbar() {
       </button>
 
       <ul className={`${styles.navLinks} ${mobileOpen ? styles.open : ''}`}>
-        {!isManager ? (
+        {isAdmin ? (
+          <li>
+            <NavLink
+              to="/admin"
+              end
+              className={({ isActive }) => `${styles.navLink} ${isActive ? styles.activeLink : ''}`}
+              onClick={handleNavClick}
+            >
+              Payments
+            </NavLink>
+          </li>
+        ) : !isManager ? (
           <>
             <li>
               <NavLink 

@@ -29,7 +29,7 @@ const createUser = async (req, res, role) => {
       ];
 
       if (!allowedGradeGroups.includes(trimmedGradegroup)) {
-        return res.status(400).json({ error: 'Invalid gradegroup for admin' });
+        return res.status(400).json({ error: 'gradegroup must be one of the available grade groups' });
       }
       storedGradegroup = trimmedGradegroup;
     }
@@ -169,12 +169,25 @@ const updateProfile = async (req, res) => {
     // ── Check if new gmail is taken by another user ─────────────────────────
     const { data: currentUser, error: fetchError } = await supabase
       .from('users')
-      .select('gmail')
+      .select('gmail, role')
       .eq('id', userId)
       .single();
 
     if (fetchError) {
       return res.status(500).json({ error: fetchError.message });
+    }
+
+    let storedGradegroup = gradegroup;
+    if (currentUser.role === 'admin') {
+      storedGradegroup = typeof gradegroup === 'string' ? gradegroup.trim() : '';
+      const allowedGradeGroups = [
+        ...(await getGradeGroupNames()),
+        ...ADMIN_EXTRA_GRADE_GROUPS,
+      ];
+
+      if (!allowedGradeGroups.includes(storedGradegroup)) {
+        return res.status(400).json({ error: 'gradegroup must be one of the available grade groups' });
+      }
     }
 
     // If gmail changed, check it's not taken
@@ -193,7 +206,7 @@ const updateProfile = async (req, res) => {
     // ── Update user profile ───────────────────────────────────────────────────
     const { data: updatedUser, error: updateError } = await supabase
       .from('users')
-      .update({ full_name: trimmedFullName, gmail, phone, gradegroup })
+      .update({ full_name: trimmedFullName, gmail, phone, gradegroup: storedGradegroup })
       .eq('id', userId)
       .select('id, full_name, gmail, role, phone, gradegroup')
       .single();

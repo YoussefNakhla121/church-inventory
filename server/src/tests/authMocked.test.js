@@ -142,6 +142,30 @@ describe('mocked authentication API', () => {
     expect(update.update).toHaveBeenCalledWith({ full_name: 'Ann', gmail: 'new@x.com', phone: '1', gradegroup: 'G' });
   });
 
+  it('allows an admin to update to an available gradegroup', async () => {
+    const update = fakeQuery({ data: { id: 'admin-1', role: 'admin', gradegroup: 'Grade 2' }, error: null });
+    mockTables(supabase, {
+      users: [
+        fakeQuery({ data: { gmail: 'admin@example.com', role: 'admin' }, error: null }),
+        update,
+      ],
+      gradegroup: fakeQuery({ data: [{ name: 'Grade 1' }, { name: 'Grade 2' }], error: null }),
+    });
+
+    const response = await request(app)
+      .put('/api/auth/profile')
+      .set(authHeader('admin'))
+      .send({ full_name: 'Admin', gmail: 'admin@example.com', phone: '1', gradegroup: ' Grade 2 ' });
+
+    expect(response.status).toBe(200);
+    expect(update.update).toHaveBeenCalledWith({
+      full_name: 'Admin',
+      gmail: 'admin@example.com',
+      phone: '1',
+      gradegroup: 'Grade 2',
+    });
+  });
+
   // This proves an unchanged gmail does not perform a uniqueness lookup.
   it('skips the uniqueness lookup when the gmail is unchanged', async () => {
     const current = fakeQuery({ data: { gmail: 'user@example.com' }, error: null });

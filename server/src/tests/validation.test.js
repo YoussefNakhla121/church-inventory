@@ -140,7 +140,7 @@ describe('auth validation', () => {
       });
 
     expect(response.status).toBe(400);
-    expect(response.body).toEqual({ error: 'Invalid gradegroup for admin' });
+    expect(response.body).toEqual({ error: 'gradegroup must be one of the available grade groups' });
   });
 
   // This proves profile updates require all profile fields before database access.

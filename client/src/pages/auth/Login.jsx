@@ -25,7 +25,8 @@ export default function Login() {
       const { token, user } = response.data;
       contextLogin(token, user);
       if (from === '/') {
-        navigate(user.role === 'manager' ? '/manager' : '/');
+        const home = user.role === 'admin' ? '/admin' : user.role === 'manager' ? '/manager' : '/';
+        navigate(home);
       } else {
         navigate(from, { replace: true });
       }
