@@ -11,14 +11,14 @@ Church Inventory app (React + Express + Supabase on Vercel).
 
 | # | Type | Step | Depends on |
 |---|------|------|-----------|
-| 0 | DB | Inspect the current database (read-only) | none |
-| 1 | DB | Allow the `admin` role | 0 |
+| 0 | DB | Inspect the current database (read-only) | **done** |
+| 1 | DB | Allow the `admin` role | **done** (enum already has `admin`) |
 | 2 | Code (server) | Create-admin endpoint + gradegroup validation | 1 |
 | 3 | Code (client) | Role select on the create-account page | 2 |
 | 4 | Code (server) | Role hardening: admin gets no requester access, admin gradegroup locked | 2 |
 | 5 | Code (client) | Admin shell: route guard, navbar, login redirect, profile | 3, 4 |
-| 6 | DB | Data hygiene: gradegroup snapshot trigger, backfills | 0 |
-| 7 | DB | `payments` table, `requests.payment_id`, indexes, RLS | 1, 6 |
+| 6 | DB | ~~Data hygiene~~ **skipped**, not needed (see below) | none |
+| 7 | DB | `payments` + `payment_requests` tables, indexes, RLS | 1 |
 | 8 | DB | Scope helper + read functions (summary, list) | 7 |
 | 9 | DB | Write functions (request / decide / cancel payment), status-lock trigger, grants | 8 |
 | 10 | Code (server) | Admin endpoints | 5, 9 |
@@ -53,6 +53,7 @@ Church Inventory app (React + Express + Supabase on Vercel).
 - Atomic or multi-row money logic lives in Postgres RPCs called with `supabase.rpc(...)`, like `create_request`. Express only validates input, calls the RPC and maps result codes to HTTP statuses.
 - Tests: Vitest + supertest in `server/src/tests/`, using `fakeQuery`/`mockTables` from `supabaseMock.js` and `authHeader(role)` from `helpers.js`. Existing tests must keep passing.
 - Emails use `server/src/utils/emails.js` and are sent after the response with `runInBackground`.
+- Prices and totals are whole-number EGP integers (`items.price`, `requests.total_price`, `payments.total_price`).
 - Never read a role or gradegroup from `req.body` to make an authorization decision. Admin gradegroup is always loaded from the DB inside the RPC.
 - Arabic text: set `dir="auto"` on elements that display gradegroup names.
 
@@ -68,8 +69,9 @@ Church Inventory app (React + Express + Supabase on Vercel).
 | Change own gradegroup | yes | n/a | **no** |
 
 ### Payment lifecycle
-1. Admin picks a period and clicks Pay. The RPC `request_payment` locks the payable requests, creates a `payments` row with status `pending` (snapshot of total, count, request ids) and sets `requests.payment_id`.
-2. Any manager reviews it. `decide_payment` with `approved` sets `payments.status='approved'` and `requests.paid=true`. With `declined` it sets `status='declined'` and clears `requests.payment_id`, so the requests become payable again.
+1. Admin picks a period and clicks Pay. The RPC `request_payment` locks the payable requests, creates a `payments` row with status `pending` and one `payment_requests` row per included request (`active = true`).
+2. Any manager reviews it. `decide_payment` with `approved` sets `payments.status='approved'` and `requests.paid=true` (the junction rows stay active, so those requests are locked for good). With `declined` it sets `status='declined'` and turns the junction rows to `active = false`, so the requests become payable again while the declined payment keeps its history.
+3. The database guarantees a request can belong to only ONE active payment (partial unique index on `payment_requests`), so double payment is impossible even if the code has a bug.
 3. Optional: the admin can cancel a pending payment (step 16).
 
 ### Dates
@@ -139,9 +141,22 @@ select
 from public.requests;
 ```
 
-What I need back: the column types (especially `start_time`), the role type/constraint, whether `users.gradegroup` has a foreign key to `gradegroup` (see 0.2 `contype = 'f'`), the exact gradegroup names, and the two function definitions.
+**Results (recorded):**
+- `requests.start_time` / `end_time` are `timestamptz`, so the Cairo-time SQL in step 8 works as written.
+- `items.price` and `requests.total_price` are **integers** (whole EGP). `requests.paid` is nullable (step 7.1 fixes that).
+- `users.role` is an enum and `admin` was already added.
+- Gradegroup names match the `ابتدائي` mapping exactly: `اول وتاني`, `تلاتة ورابعة`, `خامسة وسادسة`. `ابتدائي` is not added to the table.
+- Data: 3 requests, 0 with a null gradegroup, 0 completed requests with a null price, 0 paid.
+- `create_request` (6-argument version) already stores `COALESCE(p_gradegroup, user's gradegroup)` on every request, including rejected ones, and `change_request_status` updates status through `EXECUTE format(...)`. Both work with the step 9 status-lock trigger.
+- Still unchecked: whether `users.gradegroup` has a foreign key to `gradegroup(name)`. Check with
+  `select conname, pg_get_constraintdef(oid) from pg_constraint where conrelid = 'public.users'::regclass and contype = 'f';`
+  If it returns a foreign key on `gradegroup`, creating an `ابتدائي` admin will fail and we need to decide how to handle it.
 
 ## Step 1, DB: allow the `admin` role
+
+**Done:** `users.role` is an enum and `admin` has already been added. Nothing to run.
+
+<details><summary>Original SQL options (not needed anymore)</summary>
 
 Run **one** of the two options, depending on what 0.2 showed.
 
@@ -160,6 +175,8 @@ alter table public.users
 ```
 
 If 0.2 showed a foreign key from `users.gradegroup` to the `gradegroup` table, stop and tell me: `ابتدائي` would be rejected and we need to decide how to handle it.
+
+</details>
 
 ## Step 2, Code (server): create-admin endpoint
 
@@ -248,89 +265,22 @@ Run `npm run lint && npm run build` in client/. Final answer: files changed and 
 
 # PHASE B: Database for payments
 
-## Step 6, DB: data hygiene
+## Step 6, DB: skipped
+
+Not needed: step 0 showed there is no data to fix (0 null gradegroups, 0 completed requests with a null price), and `create_request` already stores the gradegroup on every request. A trigger or backfill would only add moving parts.
+
+Optional cleanup: `create_request` exists in two versions (5 arguments and 6 arguments with `p_gradegroup`). The app always calls the 6-argument one. Leaving both can make a call with only 5 arguments ambiguous. Drop the old one only after you are sure nothing else calls it:
 
 ```sql
--- 6.1 Snapshot the requester's gradegroup on every new request (independent of the create_request RPC)
-create or replace function public.requests_fill_gradegroup()
-returns trigger
-language plpgsql
-as $$
-begin
-  if new.gradegroup is null or btrim(new.gradegroup) = '' then
-    select u.gradegroup into new.gradegroup
-    from public.users u
-    where u.id = new.requester_id;
-  end if;
-  return new;
-end;
-$$;
-
-drop trigger if exists trg_requests_fill_gradegroup on public.requests;
-create trigger trg_requests_fill_gradegroup
-before insert on public.requests
-for each row execute function public.requests_fill_gradegroup();
+drop function if exists public.create_request(uuid, timestamptz, timestamptz, text, jsonb);
 ```
 
-```sql
--- 6.2 Backfill old requests that have no gradegroup (uses the requester's CURRENT group,
---     which is the best information available for history)
--- Preview first:
-select count(*) as will_update
-from public.requests r
-join public.users u on u.id = r.requester_id
-where (r.gradegroup is null or btrim(r.gradegroup) = '')
-  and u.gradegroup is not null and u.gradegroup <> 'N/A';
+## Step 7, DB: payments + payment_requests tables, indexes, RLS
 
--- Apply:
-update public.requests r
-set gradegroup = u.gradegroup
-from public.users u
-where u.id = r.requester_id
-  and (r.gradegroup is null or btrim(r.gradegroup) = '')
-  and u.gradegroup is not null and u.gradegroup <> 'N/A';
-```
+Design: `payments` holds one row per payment; `payment_requests` is the junction table that says which requests a payment covers. The `active` column is `true` while the payment is pending or approved. A partial unique index lets a request have only one active row, so the database itself prevents paying the same request twice. Declined or cancelled payments keep their junction rows (with `active = false`) as history.
 
 ```sql
--- 6.3 Backfill missing total_price on COMPLETED requests (same formula as server/src/utils/pricing.js:
---     1 day or less = price * qty, more than 1 day = price * 2 * days * qty, days = ceil(hours/24)).
---     Caveat: uses the items' CURRENT prices, not the price on the day of the request.
--- Preview first:
-select r.id, r.start_time, r.end_time,
-       round(sum(
-         case when ceil(extract(epoch from (r.end_time - r.start_time)) / 86400.0) > 1
-              then coalesce(i.price, 0) * 2 * ceil(extract(epoch from (r.end_time - r.start_time)) / 86400.0) * ri.quantity_requested
-              else coalesce(i.price, 0) * ri.quantity_requested
-         end)::numeric, 2) as computed_total
-from public.requests r
-join public.request_items ri on ri.request_id = r.id
-join public.items i on i.id = ri.item_id
-where r.status = 'completed' and r.total_price is null
-group by r.id, r.start_time, r.end_time;
-
--- Apply:
-update public.requests r
-set total_price = s.total
-from (
-  select r2.id,
-         round(sum(
-           case when ceil(extract(epoch from (r2.end_time - r2.start_time)) / 86400.0) > 1
-                then coalesce(i.price, 0) * 2 * ceil(extract(epoch from (r2.end_time - r2.start_time)) / 86400.0) * ri.quantity_requested
-                else coalesce(i.price, 0) * ri.quantity_requested
-           end)::numeric, 2) as total
-  from public.requests r2
-  join public.request_items ri on ri.request_id = r2.id
-  join public.items i on i.id = ri.item_id
-  where r2.status = 'completed' and r2.total_price is null
-  group by r2.id
-) s
-where r.id = s.id;
-```
-
-## Step 7, DB: payments table, `requests.payment_id`, indexes, RLS
-
-```sql
--- 7.1 paid must never be null
+-- 7.1 paid must never be null (run this first: steps 8 and 9 rely on it)
 update public.requests set paid = false where paid is null;
 alter table public.requests alter column paid set default false;
 alter table public.requests alter column paid set not null;
@@ -341,9 +291,8 @@ create table if not exists public.payments (
   gradegroup    text not null,                       -- the admin's group ('ابتدائي' or a single group)
   period_start  date not null,                       -- Cairo-local dates, inclusive
   period_end    date not null,
-  total_price   numeric(12,2) not null check (total_price > 0),
+  total_price   integer not null check (total_price > 0),   -- whole EGP, same as requests.total_price
   request_count integer not null check (request_count > 0),
-  request_ids   uuid[] not null,                     -- snapshot of the included requests (audit trail)
   status        text not null default 'pending'
                 check (status in ('pending', 'approved', 'declined', 'cancelled')),
   requested_by  uuid not null references public.users(id),
@@ -354,23 +303,34 @@ create table if not exists public.payments (
   constraint payments_period_check check (period_end >= period_start)
 );
 
--- 7.3 link requests to the payment that covers them
-alter table public.requests
-  add column if not exists payment_id uuid references public.payments(id) on delete set null;
+-- 7.3 junction table: which requests each payment covers
+create table if not exists public.payment_requests (
+  payment_id uuid not null references public.payments(id) on delete cascade,
+  request_id uuid not null references public.requests(id),
+  active     boolean not null default true,          -- true while the payment is pending or approved
+  primary key (payment_id, request_id)
+);
+
+-- a request can be in only ONE active payment (enforced by the database)
+create unique index if not exists uq_payment_requests_one_active
+  on public.payment_requests (request_id) where active;
 
 -- 7.4 indexes
-create index if not exists idx_requests_payment_id        on public.requests (payment_id);
-create index if not exists idx_requests_gradegroup_start  on public.requests (gradegroup, start_time);
-create index if not exists idx_payments_status_created    on public.payments (status, created_at desc);
-create index if not exists idx_payments_requested_by      on public.payments (requested_by, created_at desc);
+create index if not exists idx_payment_requests_request_id on public.payment_requests (request_id);
+create index if not exists idx_requests_gradegroup_start   on public.requests (gradegroup, start_time);
+create index if not exists idx_payments_status_created     on public.payments (status, created_at desc);
+create index if not exists idx_payments_requested_by       on public.payments (requested_by, created_at desc);
 
--- 7.5 lock the table down: only the backend (service role) touches it
-alter table public.payments enable row level security;
+-- 7.5 lock the tables down: only the backend (service role) touches them
+alter table public.payments         enable row level security;
+alter table public.payment_requests enable row level security;
 ```
+
+If you already ran a first version of these tables, drop them before running this step (they are empty): `drop table if exists public.payment_requests; drop table if exists public.payments;`
 
 ## Step 8, DB: scope helper + read functions
 
-Replace the three names in `admin_scope_groups` with the exact spelling from query 0.3 if they differ.
+The three names in `admin_scope_groups` already match your `gradegroup` table (confirmed by step 0).
 
 ```sql
 -- 8.1 Which grade groups an admin covers
@@ -387,7 +347,15 @@ as $$
 $$;
 ```
 
-> If query 0.1 showed that `requests.start_time` is `timestamp` **without** time zone, replace every `(r.start_time at time zone 'Africa/Cairo')::date` below with `((r.start_time at time zone 'UTC') at time zone 'Africa/Cairo')::date`. For `timestamptz` leave it as written.
+Sanity check for the mapping (expected result: **zero rows**; any row is a name that does not exist in your `gradegroup` table):
+
+```sql
+select n as missing_name
+from unnest(public.admin_scope_groups('ابتدائي')) n
+where n not in (select name from public.gradegroup);
+```
+
+`start_time` is `timestamptz` (confirmed by 0.1), so the Cairo-time expressions below work as written. In the queries below, `pr.payment_id is null` after the left join means "not in an active payment"; the unique index guarantees at most one active row per request, so the join never duplicates requests.
 
 ```sql
 -- 8.2 Totals for a period (used by the admin page)
@@ -413,16 +381,17 @@ begin
   v_scope := public.admin_scope_groups(v_group);
 
   select jsonb_build_object(
-    'payable_count',       count(*) filter (where r.status = 'completed' and not r.paid and r.payment_id is null),
-    'payable_total',       coalesce(sum(r.total_price) filter (where r.status = 'completed' and not r.paid and r.payment_id is null), 0),
-    'missing_price_count', count(*) filter (where r.status = 'completed' and not r.paid and r.payment_id is null and r.total_price is null),
-    'pending_count',       count(*) filter (where r.payment_id is not null and not r.paid),
-    'pending_total',       coalesce(sum(r.total_price) filter (where r.payment_id is not null and not r.paid), 0),
+    'payable_count',       count(*) filter (where r.status = 'completed' and not r.paid and pr.payment_id is null),
+    'payable_total',       coalesce(sum(r.total_price) filter (where r.status = 'completed' and not r.paid and pr.payment_id is null), 0),
+    'missing_price_count', count(*) filter (where r.status = 'completed' and not r.paid and pr.payment_id is null and r.total_price is null),
+    'pending_count',       count(*) filter (where pr.payment_id is not null and not r.paid),
+    'pending_total',       coalesce(sum(r.total_price) filter (where pr.payment_id is not null and not r.paid), 0),
     'paid_count',          count(*) filter (where r.paid),
     'paid_total',          coalesce(sum(r.total_price) filter (where r.paid), 0)
   )
   into v_totals
   from public.requests r
+  left join public.payment_requests pr on pr.request_id = r.id and pr.active
   where r.gradegroup = any (v_scope)
     and r.status <> 'rejected'
     and r.end_time <= now()
@@ -432,11 +401,12 @@ begin
   into v_by_group
   from (
     select r.gradegroup,
-           count(*)                          as request_count,
-           coalesce(sum(r.total_price), 0)   as total
+           count(*)                        as request_count,
+           coalesce(sum(r.total_price), 0) as total
     from public.requests r
+    left join public.payment_requests pr on pr.request_id = r.id and pr.active
     where r.gradegroup = any (v_scope)
-      and r.status = 'completed' and not r.paid and r.payment_id is null
+      and r.status = 'completed' and not r.paid and pr.payment_id is null
       and r.end_time <= now()
       and (r.start_time at time zone 'Africa/Cairo')::date between p_start and p_end
     group by r.gradegroup
@@ -486,17 +456,19 @@ begin
   into v_rows
   from (
     select r.id, r.start_time, r.end_time, r.status, r.gradegroup, r.total_price,
-           r.paid, r.payment_id,
+           r.paid,
+           pr.payment_id,
            p.status       as payment_status,
            ru.full_name   as requester_name,
-           (r.status = 'completed' and not r.paid and r.payment_id is null) as payable,
+           (r.status = 'completed' and not r.paid and pr.payment_id is null) as payable,
            (select coalesce(json_agg(json_build_object('name', i.name, 'quantity', ri.quantity_requested)), '[]'::json)
               from public.request_items ri
               join public.items i on i.id = ri.item_id
              where ri.request_id = r.id) as items
     from public.requests r
     join public.users ru on ru.id = r.requester_id
-    left join public.payments p on p.id = r.payment_id
+    left join public.payment_requests pr on pr.request_id = r.id and pr.active
+    left join public.payments p on p.id = pr.payment_id
     where r.gradegroup = any (v_scope)
       and r.status <> 'rejected'
       and r.end_time <= now()
@@ -523,7 +495,7 @@ declare
   v_scope   text[];
   v_ids     uuid[];
   v_count   integer;
-  v_total   numeric(12,2);
+  v_total   integer;
   v_missing integer;
   v_payment public.payments%rowtype;
 begin
@@ -541,22 +513,33 @@ begin
 
   v_scope := public.admin_scope_groups(v_group);
 
-  -- Lock the payable rows; a concurrent call waits, then re-checks and finds them taken.
-  with candidates as (
-    select r.id, r.total_price
-    from public.requests r
-    where r.gradegroup = any (v_scope)
-      and r.status = 'completed'
-      and r.paid = false
-      and r.payment_id is null
-      and r.end_time <= now()
-      and (r.start_time at time zone 'Africa/Cairo')::date between p_start and p_end
-    for update
-  )
-  select array_agg(id), count(*), coalesce(sum(total_price), 0),
-         count(*) filter (where total_price is null)
+  -- Step 1: lock every request this admin could pay for, in a fixed order (no deadlocks).
+  -- A concurrent call waits here until the other transaction has finished.
+  perform r.id
+  from public.requests r
+  where r.gradegroup = any (v_scope)
+    and r.status = 'completed'
+    and r.paid = false
+    and r.end_time <= now()
+    and (r.start_time at time zone 'Africa/Cairo')::date between p_start and p_end
+  order by r.id
+  for update;
+
+  -- Step 2: read the payable set. This is a separate statement, so it gets a fresh snapshot
+  -- and sees any payment the other transaction just created.
+  select array_agg(r.id), count(*), coalesce(sum(r.total_price), 0),
+         count(*) filter (where r.total_price is null)
   into v_ids, v_count, v_total, v_missing
-  from candidates;
+  from public.requests r
+  where r.gradegroup = any (v_scope)
+    and r.status = 'completed'
+    and r.paid = false
+    and r.end_time <= now()
+    and (r.start_time at time zone 'Africa/Cairo')::date between p_start and p_end
+    and not exists (
+      select 1 from public.payment_requests pr
+      where pr.request_id = r.id and pr.active
+    );
 
   if v_count = 0 then
     return json_build_object('success', false, 'code', 'nothing_payable');
@@ -569,12 +552,13 @@ begin
   end if;
 
   insert into public.payments
-    (gradegroup, period_start, period_end, total_price, request_count, request_ids, requested_by)
+    (gradegroup, period_start, period_end, total_price, request_count, requested_by)
   values
-    (v_group, p_start, p_end, v_total, v_count, v_ids, p_admin_id)
+    (v_group, p_start, p_end, v_total, v_count, p_admin_id)
   returning * into v_payment;
 
-  update public.requests set payment_id = v_payment.id where id = any (v_ids);
+  insert into public.payment_requests (payment_id, request_id)
+  select v_payment.id, unnest(v_ids);
 
   return json_build_object('success', true, 'payment', to_jsonb(v_payment));
 end;
@@ -617,9 +601,13 @@ begin
   returning * into v_payment;
 
   if p_decision = 'approved' then
-    update public.requests set paid = true where payment_id = p_payment_id;
+    -- the junction rows stay active: these requests are paid and locked for good
+    update public.requests
+    set paid = true
+    where id in (select pr.request_id from public.payment_requests pr where pr.payment_id = p_payment_id);
   else
-    update public.requests set payment_id = null where payment_id = p_payment_id;
+    -- release the requests so they can be paid again; the rows stay as history
+    update public.payment_requests set active = false where payment_id = p_payment_id;
   end if;
 
   return json_build_object('success', true, 'payment', to_jsonb(v_payment));
@@ -652,7 +640,7 @@ begin
   where id = p_payment_id
   returning * into v_payment;
 
-  update public.requests set payment_id = null where payment_id = p_payment_id;
+  update public.payment_requests set active = false where payment_id = p_payment_id;
 
   return json_build_object('success', true, 'payment', to_jsonb(v_payment));
 end;
@@ -666,7 +654,11 @@ returns trigger
 language plpgsql
 as $$
 begin
-  if new.status is distinct from old.status and old.payment_id is not null then
+  if new.status is distinct from old.status
+     and exists (
+       select 1 from public.payment_requests pr
+       where pr.request_id = old.id and pr.active
+     ) then
     raise exception 'request_in_payment: this request is part of a payment and its status cannot be changed';
   end if;
   return new;
@@ -705,6 +697,20 @@ select public.admin_period_summary('00000000-0000-0000-0000-000000000000', curre
 -- expected: {"success": false, "code": "not_admin"} for a non-admin id; real numbers for an admin id
 ```
 
+**Consistency check** (run any time; expected result: zero rows). It finds paid requests that are not covered by an approved payment:
+
+```sql
+select r.id
+from public.requests r
+where r.paid
+  and not exists (
+    select 1
+    from public.payment_requests pr
+    join public.payments p on p.id = pr.payment_id
+    where pr.request_id = r.id and pr.active and p.status = 'approved'
+  );
+```
+
 **Rollback** (only if you need to undo steps 7 to 9):
 
 ```sql
@@ -716,7 +722,7 @@ drop function if exists public.request_payment(uuid, date, date);
 drop function if exists public.admin_list_requests(uuid, date, date, integer, integer);
 drop function if exists public.admin_period_summary(uuid, date, date);
 drop function if exists public.admin_scope_groups(text);
-alter table public.requests drop column if exists payment_id;
+drop table if exists public.payment_requests;
 drop table if exists public.payments;
 ```
 
@@ -753,7 +759,7 @@ Read docs/admin-payments-plan.md, sections "Decisions" and "Shared context", fir
 Files: client/src/api/admin.js (new), client/src/pages/admin/AdminPayments.jsx + AdminPayments.module.css (replace the placeholder), client/src/utils/format.js (new), client/src/components/ItemCard.jsx.
 
 1. api/admin.js: getAdminSummary(start,end), getAdminRequests(start,end,page,pageSize), requestPayment(start,end), getMyPayments(page,pageSize) matching the contract.
-2. utils/format.js: formatMoney(n) using Intl.NumberFormat with currency EGP, and formatDateTime. Fix ItemCard.jsx which shows "$" so it uses formatMoney.
+2. utils/format.js: formatMoney(n) using Intl.NumberFormat with currency EGP and no decimals (prices are whole numbers), and formatDateTime. Fix ItemCard.jsx which shows "$" so it uses formatMoney.
 3. AdminPayments page (follow Manager Dashboard patterns for layout, loading, error, mobile cards):
    - Header showing the admin's gradegroup (from the summary response) and, when the scope has several groups, the covered groups.
    - Period picker: two date inputs (start/end, default = first day of the current month to today; end cannot be before start). Changing the period refetches summary and list, and resets to page 1.
@@ -775,7 +781,7 @@ Read docs/admin-payments-plan.md, sections "Decisions" and "Shared context", fir
 1. server/src/controllers/paymentsController.js + server/src/routes/payments.js, mounted in app.js at /api/payments. Every route uses auth then requireManager. Register /pending-count BEFORE /:id.
    - GET / -> list from `payments` with the admin's name (join users via the requested_by foreign key; verify the real FK name), optional ?status filter validated against pending|approved|declined|cancelled, newest first, paged with parsePaging and { count: 'exact' }, response { data, total, page, pageSize }.
    - GET /pending-count -> { count } of status 'pending' (use head:true / count:'exact').
-   - GET /:id -> validate UUID (400 'Invalid payment ID'), return the payment with requested_by_name / decided_by_name, plus `requests`: load requests whose id is in payment.request_ids with requester full_name and request_items -> items(name) mapped to { name, quantity }. 404 if missing.
+   - GET /:id -> validate UUID (400 'Invalid payment ID'), return the payment with requested_by_name / decided_by_name, plus `requests`: load the included requests through the `payment_requests` junction table (rows with payment_id = :id, joined to requests) with requester full_name and request_items -> items(name) mapped to { name, quantity }. 404 if missing.
    - PATCH /:id/decision body { decision, note } -> validate; rpc('decide_payment', { p_payment_id, p_manager_id: req.user.id, p_decision, p_note }). Map codes: not_found 404, already_decided 409, invalid_decision 400, not_manager 403, RPC error 500. Success -> 200 { payment }.
 2. requestsController.updateRequestStatus: when the RPC error message contains 'request_in_payment', respond 409 { error: "This request is part of a payment (pending or approved), so its status can't be changed.", code: 'request_in_payment' }. Any other RPC error stays 500.
 3. Tests: auth/role gates (admin and requester tokens -> 403), status filter validation, UUID validation, each decide_payment code mapping, that p_manager_id comes from the token, the pending-count route is not captured by /:id, and the request_in_payment mapping.
@@ -847,10 +853,7 @@ Run `npm test` in server/ and `npm run lint && npm run build` in client/. Final 
 
 ---
 
-## Open items I could not verify (answer these after Step 0)
+## Still open
 
-- Exact spelling of the gradegroup names in your table (the `ابتدائي` mapping in step 8 uses `اول وتاني`, `تلاتة ورابعة`, `خامسة وسادسة`).
-- Whether `start_time`/`end_time` are `timestamptz` or `timestamp` (step 8 note).
-- How `users.role` is constrained, and whether `users.gradegroup` has a foreign key (step 1).
-- What `create_request` does today with `gradegroup` for requesters (the step 6 trigger makes this safe either way).
-- D1 to D9 above, especially D1 (no payment gateway) and D2 (`completed` requests only).
+- Whether `users.gradegroup` has a foreign key to the `gradegroup` table (query in step 0 results). If it does, creating an `ابتدائي` admin fails.
+- D1 to D9 stand as written unless you change them, especially D1 (no payment gateway) and D2 (`completed` requests only).
