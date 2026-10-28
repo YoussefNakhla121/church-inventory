@@ -1,5 +1,6 @@
 import styles from './ItemCard.module.css';
 import { useAuth } from '../context/AuthContext';
+import { formatMoney } from '../utils/format';
 
 export default function ItemCard({ item, actions, children, onPhotoClick }) {
   const { user } = useAuth();
@@ -54,7 +55,7 @@ export default function ItemCard({ item, actions, children, onPhotoClick }) {
           {showPrice && (
             <div className={styles.infoRow}>
               <span className={styles.qtyLabel}>Price</span>
-              <span className={styles.qtyValue}>${price?.toFixed(2) ?? '0.00'}</span>
+              <span className={styles.qtyValue}>{formatMoney(price)}</span>
             </div>
           )}
         </div>
