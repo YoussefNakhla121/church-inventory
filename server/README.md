@@ -37,6 +37,7 @@ cp .env.example .env
 | `GMAIL_USER`          | Gmail account used for notification emails       |
 | `GMAIL_APP_PASSWORD`  | Gmail app password for notification emails       |
 | `MAIL_FROM_NAME`      | Display name used in notification email senders  |
+| `CLIENT_URL`          | Frontend URL used in payment notification links  |
 
 > ⚠️ Never commit `.env` to version control. The service role key bypasses all RLS policies.
 

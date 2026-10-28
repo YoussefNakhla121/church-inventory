@@ -1,6 +1,8 @@
 const supabase = require('../config/supabase');
 const { parsePaging } = require('./requestsController');
 const { validatePeriod } = require('../utils/dates');
+const { sendPaymentRequestedEmails } = require('../utils/emails');
+const { runInBackground } = require('../utils/background');
 
 const validateRequestPeriod = (req, res) => {
   const { start, end } = req.query;
@@ -84,7 +86,11 @@ const requestPayment = async (req, res) => {
     });
 
     if (error) return res.status(500).json({ error: error.message });
-    if (data?.success) return res.status(201).json({ payment: data.payment });
+    if (data?.success) {
+      res.status(201).json({ payment: data.payment });
+      runInBackground(sendPaymentRequestedEmails(data.payment.id));
+      return;
+    }
 
     const messages = {
       not_admin: 'Only an admin can request a payment.',

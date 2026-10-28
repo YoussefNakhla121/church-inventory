@@ -39,6 +39,15 @@ function statusBadge(status) {
   return `<span style="background:${colors.bg};color:${colors.color};padding:3px 10px;border-radius:12px;font-size:13px;font-weight:600;">${label}</span>`;
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 /**
  * Wrap email body content in the standard Church Inventory layout.
  */
@@ -361,12 +370,138 @@ async function sendStatusChangeEmails(requestId, request, changedById) {
   }
 }
 
+async function notifyManagersPaymentRequested(payment, admin, managers) {
+  if (process.env.NODE_ENV === 'test') return;
+
+  const adminName = escapeHtml(admin.full_name || 'Unknown admin');
+  const gradegroup = escapeHtml(payment.gradegroup || 'N/A');
+  const periodStart = escapeHtml(payment.period_start);
+  const periodEnd = escapeHtml(payment.period_end);
+  const paymentUrl = escapeHtml(
+    `${process.env.CLIENT_URL || 'https://wsa2l-el-2daa7.vercel.app'}/manager/payments/${payment.id}`
+  );
+  const body = wrapHtml(`
+    <p style="margin:0 0 16px;">A payment request needs manager approval.</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+      <tr><td style="padding:4px 8px;font-weight:600;">Admin:</td><td style="padding:4px 8px;">${adminName}</td></tr>
+      <tr><td style="padding:4px 8px;font-weight:600;">Grade Group:</td><td style="padding:4px 8px;">${gradegroup}</td></tr>
+      <tr><td style="padding:4px 8px;font-weight:600;">Period:</td><td style="padding:4px 8px;">${periodStart} - ${periodEnd}</td></tr>
+      <tr><td style="padding:4px 8px;font-weight:600;">Requests:</td><td style="padding:4px 8px;">${payment.request_count}</td></tr>
+      <tr><td style="padding:4px 8px;font-weight:600;">Total:</td><td style="padding:4px 8px;">${payment.total_price} EGP</td></tr>
+    </table>
+    <p style="margin:0;"><a href="${paymentUrl}" style="display:inline-block;background:#c4622d;color:#ffffff;padding:10px 16px;border-radius:6px;text-decoration:none;">Review payment</a></p>
+  `);
+
+  const subject = `Payment approval needed: ${payment.gradegroup || 'N/A'}`;
+  for (let i = 0; i < managers.length; i++) {
+    const manager = managers[i];
+    try {
+      await sendEmail(manager.gmail, subject, body);
+      if (i < managers.length - 1) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    } catch (err) {
+      console.error(`Payment email to manager ${manager.gmail} failed:`, err.message);
+    }
+  }
+}
+
+async function notifyAdminPaymentDecision(payment, admin, manager) {
+  if (process.env.NODE_ENV === 'test') return;
+
+  const decision = payment.status === 'approved' ? 'approved' : 'declined';
+  const adminName = escapeHtml(admin.full_name || 'Unknown admin');
+  const managerName = escapeHtml(manager.full_name || 'Unknown manager');
+  const gradegroup = escapeHtml(payment.gradegroup || 'N/A');
+  const periodStart = escapeHtml(payment.period_start);
+  const periodEnd = escapeHtml(payment.period_end);
+  const note = payment.decision_note
+    ? `<p style="margin:16px 0 0;"><strong>Decline note:</strong> ${escapeHtml(payment.decision_note)}</p>`
+    : '';
+  const body = wrapHtml(`
+    <p style="margin:0 0 16px;">Your payment request has been ${decision}.</p>
+    <table style="width:100%;border-collapse:collapse;margin-bottom:16px;">
+      <tr><td style="padding:4px 8px;font-weight:600;">Admin:</td><td style="padding:4px 8px;">${adminName}</td></tr>
+      <tr><td style="padding:4px 8px;font-weight:600;">Grade Group:</td><td style="padding:4px 8px;">${gradegroup}</td></tr>
+      <tr><td style="padding:4px 8px;font-weight:600;">Period:</td><td style="padding:4px 8px;">${periodStart} - ${periodEnd}</td></tr>
+      <tr><td style="padding:4px 8px;font-weight:600;">Total:</td><td style="padding:4px 8px;">${payment.total_price} EGP</td></tr>
+      <tr><td style="padding:4px 8px;font-weight:600;">Decided by:</td><td style="padding:4px 8px;">${managerName}</td></tr>
+    </table>
+    ${note}
+  `);
+
+  await sendEmail(
+    admin.gmail,
+    `Your payment was ${decision}`,
+    body
+  );
+}
+
+async function sendPaymentRequestedEmails(paymentId) {
+  if (process.env.NODE_ENV === 'test') return;
+  const startedAt = Date.now();
+  console.log(`[email:payment-requested] started payment ${paymentId}`);
+
+  try {
+    const [paymentResult] = await Promise.all([
+      supabase.from('payments').select('*').eq('id', paymentId).single(),
+    ]);
+    if (paymentResult.error) throw paymentResult.error;
+    const payment = paymentResult.data;
+
+    const [adminResult, managersResult] = await Promise.all([
+      supabase.from('users').select('id, full_name, gmail').eq('id', payment.requested_by).single(),
+      supabase.from('users').select('id, full_name, gmail').eq('role', 'manager'),
+    ]);
+    if (adminResult.error || managersResult.error) {
+      throw adminResult.error || managersResult.error;
+    }
+
+    await notifyManagersPaymentRequested(payment, adminResult.data, managersResult.data || []);
+  } catch (err) {
+    console.error(`[email:payment-requested] payment ${paymentId} failed:`, err);
+  } finally {
+    console.log(`[email:payment-requested] finished payment ${paymentId} in ${Date.now() - startedAt}ms`);
+  }
+}
+
+async function sendPaymentDecisionEmails(paymentId) {
+  if (process.env.NODE_ENV === 'test') return;
+  const startedAt = Date.now();
+  console.log(`[email:payment-decision] started payment ${paymentId}`);
+
+  try {
+    const paymentResult = await supabase.from('payments').select('*').eq('id', paymentId).single();
+    if (paymentResult.error) throw paymentResult.error;
+    const payment = paymentResult.data;
+
+    const [adminResult, managerResult] = await Promise.all([
+      supabase.from('users').select('id, full_name, gmail').eq('id', payment.requested_by).single(),
+      supabase.from('users').select('id, full_name, gmail').eq('id', payment.decided_by).single(),
+    ]);
+    if (adminResult.error || managerResult.error) {
+      throw adminResult.error || managerResult.error;
+    }
+
+    await notifyAdminPaymentDecision(payment, adminResult.data, managerResult.data);
+  } catch (err) {
+    console.error(`[email:payment-decision] payment ${paymentId} failed:`, err);
+  } finally {
+    console.log(`[email:payment-decision] finished payment ${paymentId} in ${Date.now() - startedAt}ms`);
+  }
+}
+
 module.exports = {
   isValidEmail,
   fmtDate,
+  escapeHtml,
   notifyManagersNewRequest,
   notifyRequesterRequestCreated,
   notifyRequesterStatusChange,
   sendNewRequestEmails,
   sendStatusChangeEmails,
+  notifyManagersPaymentRequested,
+  notifyAdminPaymentDecision,
+  sendPaymentRequestedEmails,
+  sendPaymentDecisionEmails,
 };

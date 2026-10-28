@@ -1,6 +1,8 @@
 const { validate: validateUuid } = require('uuid');
 const supabase = require('../config/supabase');
 const { parsePaging } = require('./requestsController');
+const { sendPaymentDecisionEmails } = require('../utils/emails');
+const { runInBackground } = require('../utils/background');
 
 const VALID_STATUSES = ['pending', 'approved', 'declined', 'cancelled'];
 const VALID_DECISIONS = ['approved', 'declined'];
@@ -162,7 +164,11 @@ const decidePayment = async (req, res) => {
     });
 
     if (error) return res.status(500).json({ error: error.message });
-    if (data?.success) return res.status(200).json({ payment: data.payment });
+    if (data?.success) {
+      res.status(200).json({ payment: data.payment });
+      runInBackground(sendPaymentDecisionEmails(id));
+      return;
+    }
 
     const statusByCode = {
       not_found: 404,
