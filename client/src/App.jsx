@@ -26,6 +26,8 @@ import ItemManagement from './pages/manager/ItemManagement';
 import ItemForm from './pages/manager/ItemForm';
 import ItemConditionHistory from './pages/manager/ItemConditionHistory';
 import CreateManagerAccount from './pages/manager/CreateManagerAccount';
+import ManagerPayments from './pages/manager/Payments';
+import PaymentDetail from './pages/manager/PaymentDetail';
 import AdminPayments from './pages/admin/AdminPayments';
 
 export default function App() {
@@ -100,6 +102,22 @@ export default function App() {
                 element={
                   <ManagerRoute>
                     <ManagerDashboard />
+                  </ManagerRoute>
+                }
+              />
+              <Route
+                path="/manager/payments"
+                element={
+                  <ManagerRoute>
+                    <ManagerPayments />
+                  </ManagerRoute>
+                }
+              />
+              <Route
+                path="/manager/payments/:id"
+                element={
+                  <ManagerRoute>
+                    <PaymentDetail />
                   </ManagerRoute>
                 }
               />

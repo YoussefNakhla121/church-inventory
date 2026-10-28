@@ -8,6 +8,7 @@ const commentRoutes = require('./routes/comments');
 const conditionReportRoutes = require('./routes/conditionReports');
 const gradeGroupsRoutes = require('./routes/gradeGroups');
 const adminRoutes = require('./routes/admin');
+const paymentsRoutes = require('./routes/payments');
 
 
 const app = express();
@@ -63,6 +64,7 @@ app.use('/api/requests', requestRoutes);
 app.use('/api/requests', commentRoutes);
 app.use('/api/requests', conditionReportRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/payments', paymentsRoutes);
 
 // ─── 404 catch-all ────────────────────────────────────────────────────────────
 app.use((req, res) => {

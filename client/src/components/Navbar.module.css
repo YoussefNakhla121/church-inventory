@@ -144,6 +144,22 @@
   background: rgba(196, 98, 45, 0.3) !important;
 }
 
+.pendingBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1rem;
+  height: 1rem;
+  margin-left: .25rem;
+  padding: 0 .2rem;
+  border-radius: 999px;
+  background: #c4622d;
+  color: #fff;
+  font-size: .55rem;
+  line-height: 1;
+  vertical-align: middle;
+}
+
 /* ========== USER INFO (desktop) ========== */
 .userInfoMobile {
   display: none;

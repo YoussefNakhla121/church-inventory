@@ -1,0 +1,42 @@
+.container { max-width: 1100px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; }
+.backLink { color: var(--primary); text-decoration: none; font-weight: 600; }
+.backLink:hover { text-decoration: underline; }
+.header { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.title { margin: 0; color: var(--text-primary); font-size: 2.2rem; }
+.subtitle { margin: .4rem 0 0; color: var(--text-secondary); }
+.statusBadge { border-radius: 999px; padding: .35rem .7rem; font-weight: 700; text-transform: capitalize; font-size: .8rem; }
+.statusPending { background: #fff1d6; color: #9a5b00; }
+.statusApproved { background: #dcfce7; color: #166534; }
+.statusDeclined { background: #fee2e2; color: #991b1b; }
+.statusCancelled { background: #e5e7eb; color: #374151; }
+.summary, .requestsSection, .decisionPanel { background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); }
+.summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.25rem; padding: 1.5rem; }
+.summary div { display: flex; flex-direction: column; gap: .25rem; min-width: 0; }
+.summary span, .decisionPanel label { color: var(--text-muted); font-size: .75rem; font-weight: 600; }
+.summary strong { color: var(--text-primary); overflow-wrap: anywhere; }
+.noteValue { grid-column: span 2; }
+.requestsSection { padding: 1.5rem; }
+.requestsSection h2 { margin: 0 0 1rem; color: var(--text-primary); font-size: 1.2rem; }
+.tableWrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; text-align: left; color: var(--text-primary); }
+.table th { background: #f0e8dc; color: var(--text-secondary); font-size: .75rem; text-transform: uppercase; padding: .8rem; }
+.table td { border-bottom: 1px solid var(--border); padding: .9rem .8rem; vertical-align: top; }
+.totalRow td { font-weight: 800; border-bottom: 0; }
+.totalRow td:first-child { text-align: right; }
+.decisionPanel { padding: 1.5rem; display: flex; flex-direction: column; gap: .7rem; }
+.decisionPanel textarea { border: 1px solid var(--border); border-radius: var(--radius-md); padding: .75rem; font: inherit; resize: vertical; color: var(--text-primary); }
+.actions { display: flex; gap: .75rem; flex-wrap: wrap; }
+.acceptButton, .declineButton { border: 0; border-radius: var(--radius-md); padding: .7rem 1rem; font-weight: 700; cursor: pointer; }
+.acceptButton { background: var(--success); color: #fff; }
+.declineButton { background: var(--error); color: #fff; }
+.acceptButton:disabled, .declineButton:disabled { opacity: .55; cursor: not-allowed; }
+.error { background: var(--error-light); color: var(--error); border: 1px solid rgba(239, 68, 68, .2); padding: 1rem; border-radius: var(--radius-md); }
+.loading { padding: 4rem; text-align: center; color: var(--text-secondary); }
+
+@media (max-width: 760px) {
+  .container { padding: 1rem .75rem; }
+  .title { font-size: 1.75rem; }
+  .summary { grid-template-columns: repeat(2, 1fr); padding: 1rem; }
+  .noteValue { grid-column: span 2; }
+  .requestsSection, .decisionPanel { padding: 1rem; }
+}

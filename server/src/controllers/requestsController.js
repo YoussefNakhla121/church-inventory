@@ -426,7 +426,15 @@ const updateRequestStatus = async (req, res) => {
       p_new_status: newStatus,
     });
 
-    if (error) return res.status(500).json({ error: error.message });
+    if (error) {
+      if (error.message?.includes('request_in_payment')) {
+        return res.status(409).json({
+          error: "This request is part of a payment (pending or approved), so its status can't be changed.",
+          code: 'request_in_payment',
+        });
+      }
+      return res.status(500).json({ error: error.message });
+    }
 
     if (!data?.success) {
       if (data?.code === 'not_found') {
