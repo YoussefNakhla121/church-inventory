@@ -5,7 +5,7 @@ import {
   getMyPayments,
   requestPayment,
 } from '../../api/admin';
-import { formatDateTime, formatMoney } from '../../utils/format';
+import { formatDate, formatDateTime, formatMoney } from '../../utils/format';
 import styles from './AdminPayments.module.css';
 
 const PAGE_SIZE = 20;
@@ -27,14 +27,15 @@ const getInitialPeriod = () => {
 
 const getPaymentErrorMessage = (error) => {
   const code = error.response?.data?.code;
-  const messages = {
-    invalid_period: 'The selected payment period is invalid.',
-    not_admin: 'Only an admin can request a payment.',
-    nothing_payable: 'There are no payable requests in this period.',
-    missing_prices: 'Payment is blocked because some requests have no price.',
-    zero_total: 'Payment is blocked because the payable total is zero.',
-  };
-  return messages[code] || 'Unable to request payment. Please try again.';
+  const missingCount = error.response?.data?.missing_count;
+  switch (code) {
+    case 'invalid_period': return 'The selected payment period is invalid.';
+    case 'not_admin': return 'Only an admin can request a payment.';
+    case 'nothing_payable': return 'There are no payable requests in this period.';
+    case 'missing_prices': return `Payment is blocked because ${missingCount || 'some'} request(s) have no price. A manager must fix the missing prices first.`;
+    case 'zero_total': return 'Payment is blocked because the payable total is zero.';
+    default: return 'Unable to request payment. Please try again.';
+  }
 };
 
 const getRequestBadge = (request) => {
@@ -322,7 +323,7 @@ export default function AdminPayments() {
             <article className={styles.paymentCard} key={payment.id}>
               <div>
                 <strong dir="auto">{payment.gradegroup}</strong>
-                <span>{formatDateTime(payment.period_start)} to {formatDateTime(payment.period_end)}</span>
+                <span>{formatDate(payment.period_start)} to {formatDate(payment.period_end)}</span>
               </div>
               <strong>{formatMoney(payment.total_price)}</strong>
               <span className={`${styles.badge} ${getPaymentStatusClass(payment.status)}`}>

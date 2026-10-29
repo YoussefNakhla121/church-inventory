@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { decidePayment, getPayment } from '../../api/payments';
-import { formatDateTime, formatMoney } from '../../utils/format';
+import { formatDate, formatDateTime, formatMoney } from '../../utils/format';
 import styles from './PaymentDetail.module.css';
 
 const statusClass = (status, styles) => styles[`status${status[0].toUpperCase()}${status.slice(1)}`] || '';
@@ -43,7 +43,7 @@ export default function PaymentDetail() {
   const handleDecision = async (decision) => {
     if (decision === 'approved') {
       const confirmed = window.confirm(
-        `Accept payment for ${payment.period_start} - ${payment.period_end}, ${payment.gradegroup}, total ${formatMoney(payment.total_price)}?`
+        `Accept payment for ${formatDate(payment.period_start)} - ${formatDate(payment.period_end)}, ${payment.gradegroup}, total ${formatMoney(payment.total_price)}?`
       );
       if (!confirmed) return;
     }
@@ -90,7 +90,7 @@ export default function PaymentDetail() {
       <section className={styles.summary}>
         <div><span>Admin</span><strong>{payment.requested_by_name || 'Unknown admin'}</strong></div>
         <div><span>Gradegroup</span><strong dir="auto">{payment.gradegroup || '—'}</strong></div>
-        <div><span>Period</span><strong>{payment.period_start} - {payment.period_end}</strong></div>
+        <div><span>Period</span><strong>{formatDate(payment.period_start)} - {formatDate(payment.period_end)}</strong></div>
         <div><span>Total</span><strong>{formatMoney(payment.total_price)}</strong></div>
         <div><span>Requests</span><strong>{payment.request_count}</strong></div>
         <div><span>Decided by</span><strong>{payment.decided_by_name || '—'}</strong></div>

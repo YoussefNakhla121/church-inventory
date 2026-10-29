@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getPayments } from '../../api/payments';
-import { formatDateTime, formatMoney } from '../../utils/format';
+import { formatDate, formatDateTime, formatMoney } from '../../utils/format';
 import styles from './Payments.module.css';
 
 const PAGE_SIZE = 20;
@@ -112,7 +112,7 @@ export default function Payments() {
                 </span>
               </div>
               <div className={styles.details}>
-                <div><span>Period</span><strong>{payment.period_start} - {payment.period_end}</strong></div>
+                <div><span>Period</span><strong>{formatDate(payment.period_start)} - {formatDate(payment.period_end)}</strong></div>
                 <div><span>Requests</span><strong>{payment.request_count}</strong></div>
                 <div><span>Total</span><strong>{formatMoney(payment.total_price)}</strong></div>
                 <div><span>Created</span><strong>{formatDateTime(payment.created_at)}</strong></div>
